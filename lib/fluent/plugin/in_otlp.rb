@@ -91,13 +91,13 @@ module Fluent::Plugin
       handler = HttpHandler.new
       http_server_create_http_server(:in_otel_http_server_helper, addr: @http_config.bind, port: @http_config.port, logger: log) do |serv|
         serv.post('/v1/logs') do |req|
-          handler.logs(req) { |record| router.emit(@tag, Fluent::EventTime.now, { otlp_logs: record }) }
+          handler.logs(req) { |record| router.emit(@tag, Fluent::EventTime.now, { type: "otlp_logs", message: record }) }
         end
         serv.post('/v1/metrics') do |req|
-          handler.metrics(req) { |record| router.emit(@tag, Fluent::EventTime.now, { otlp_metrics: record }) }
+          handler.metrics(req) { |record| router.emit(@tag, Fluent::EventTime.now, { type: "otlp_metrics", message: record }) }
         end
         serv.post('/v1/traces') do |req|
-          handler.traces(req) { |record| router.emit(@tag, Fluent::EventTime.now, { otlp_traces: record }) }
+          handler.traces(req) { |record| router.emit(@tag, Fluent::EventTime.now, { type: "otlp_traces", message: record }) }
         end
       end
     end

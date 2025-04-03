@@ -18,6 +18,10 @@ module Fluent::Plugin::Otlp
           end
       end
 
+      def encode
+        Opentelemetry::Proto::Collector::Logs::V1::ExportLogsServiceRequest.encode(@request)
+      end
+
       def record
         @request.to_json
       end
@@ -33,6 +37,10 @@ module Fluent::Plugin::Otlp
           end
       end
 
+      def encode
+        Opentelemetry::Proto::Collector::Metrics::V1::ExportMetricsServiceRequest.encode(@request)
+      end
+
       def record
         @request.to_json
       end
@@ -46,6 +54,10 @@ module Fluent::Plugin::Otlp
           else
             Opentelemetry::Proto::Collector::Trace::V1::ExportTraceServiceRequest.decode_json(body)
           end
+      end
+
+      def encode
+        Opentelemetry::Proto::Collector::Trace::V1::ExportTraceServiceRequest.encode(@request)
       end
 
       def record
