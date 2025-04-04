@@ -1,0 +1,31 @@
+inherit_from: .rubocop_todo.yml
+
+AllCops:
+  TargetRubyVersion: 3.1
+  Exclude:
+    - 'lib/opentelemetry/**/*.rb'
+
+Layout/LineLength:
+  Max: 140
+
+Lint/UnusedMethodArgument:
+  Enabled: false
+
+Metrics:
+  Enabled: false
+
+Style/Copyright:
+  Enabled: false
+
+Style/ClassAndModuleChildren:
+  Enabled: false
+
+Style/StringHashKeys:
+  Enabled: false
+
+Style/StringLiterals:
+  EnforcedStyle: double_quotes
+
+Style/RequireOrder:
+  Enabled: true
+
