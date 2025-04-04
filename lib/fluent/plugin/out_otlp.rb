@@ -26,6 +26,14 @@ module Fluent::Plugin
     desc "Compress request body"
     config_param :compress, :enum, list: %i[text gzip], default: :text
 
+    def configure(conf)
+      super
+
+      OtlpOutput.const_set(:HTTP_LOGS_ENDPOINT, "#{@http_config.endpoint}/v1/logs".freeze)
+      OtlpOutput.const_set(:HTTP_METRICS_ENDPOINT, "#{@http_config.endpoint}/v1/metrics".freeze)
+      OtlpOutput.const_set(:HTTP_TRACES_ENDPOINT, "#{@http_config.endpoint}/v1/traces".freeze)
+    end
+
     def multi_workers_ready?
       true
     end
@@ -35,18 +43,28 @@ module Fluent::Plugin
     end
 
     def write(chunk)
+      uri, req = create_request(chunk)
+
+      Net::HTTP.start(uri.host, uri.port) do |http|
+        http.request(req)
+      end
+    end
+
+    private
+
+    def create_request(chunk)
       record = JSON.parse(chunk.read)
       msg = record["message"]
 
       case record["type"]
       when "otlp_logs"
-        uri = "#{@http_config.endpoint}/v1/logs"
+        uri = HTTP_LOGS_ENDPOINT
         body = Otlp::Request::Logs.new(msg).encode
       when "otlp_metrics"
-        uri = "#{@http_config.endpoint}/v1/metrics"
+        uri = HTTP_METRICS_ENDPOINT
         body = Otlp::Request::Metrics.new(msg).encode
       when "otlp_traces"
-        uri = "#{@http_config.endpoint}/v1/traces"
+        uri = HTTP_TRACES_ENDPOINT
         body = Otlp::Request::Traces.new(msg).encode
       end
 
@@ -62,10 +80,7 @@ module Fluent::Plugin
       end
 
       req.body = body
-
-      Net::HTTP.start(uri.host, uri.port) do |http|
-        http.request(req)
-      end
+      [uri, req]
     end
   end
 end

@@ -6,63 +6,61 @@ require "opentelemetry/proto/collector/logs/v1/logs_service_pb"
 require "opentelemetry/proto/collector/metrics/v1/metrics_service_pb"
 require "opentelemetry/proto/collector/trace/v1/trace_service_pb"
 
-module Fluent::Plugin::Otlp
-  class Request
-    class Logs
-      def initialize(body)
-        @request =
-          if body.encoding == Encoding::BINARY
-            Opentelemetry::Proto::Collector::Logs::V1::ExportLogsServiceRequest.decode(body)
-          else
-            Opentelemetry::Proto::Collector::Logs::V1::ExportLogsServiceRequest.decode_json(body)
-          end
-      end
-
-      def encode
-        Opentelemetry::Proto::Collector::Logs::V1::ExportLogsServiceRequest.encode(@request)
-      end
-
-      def record
-        @request.to_json
-      end
+class Fluent::Plugin::Otlp::Request
+  class Logs
+    def initialize(body)
+      @request =
+        if body.encoding == Encoding::BINARY
+          Opentelemetry::Proto::Collector::Logs::V1::ExportLogsServiceRequest.decode(body)
+        else
+          Opentelemetry::Proto::Collector::Logs::V1::ExportLogsServiceRequest.decode_json(body)
+        end
     end
 
-    class Metrics
-      def initialize(body)
-        @request =
-          if body.encoding == Encoding::BINARY
-            Opentelemetry::Proto::Collector::Metrics::V1::ExportMetricsServiceRequest.decode(body)
-          else
-            Opentelemetry::Proto::Collector::Metrics::V1::ExportMetricsServiceRequest.decode_json(body)
-          end
-      end
-
-      def encode
-        Opentelemetry::Proto::Collector::Metrics::V1::ExportMetricsServiceRequest.encode(@request)
-      end
-
-      def record
-        @request.to_json
-      end
+    def encode
+      Opentelemetry::Proto::Collector::Logs::V1::ExportLogsServiceRequest.encode(@request)
     end
 
-    class Traces
-      def initialize(body)
-        @request =
-          if body.encoding == Encoding::BINARY
-            Opentelemetry::Proto::Collector::Trace::V1::ExportTraceServiceRequest.decode(body)
-          else
-            Opentelemetry::Proto::Collector::Trace::V1::ExportTraceServiceRequest.decode_json(body)
-          end
-      end
+    def record
+      @request.to_json
+    end
+  end
 
-      def encode
-        Opentelemetry::Proto::Collector::Trace::V1::ExportTraceServiceRequest.encode(@request)
-      end
+  class Metrics
+    def initialize(body)
+      @request =
+        if body.encoding == Encoding::BINARY
+          Opentelemetry::Proto::Collector::Metrics::V1::ExportMetricsServiceRequest.decode(body)
+        else
+          Opentelemetry::Proto::Collector::Metrics::V1::ExportMetricsServiceRequest.decode_json(body)
+        end
+    end
 
-      def record
-        @request.to_json
-      end
+    def encode
+      Opentelemetry::Proto::Collector::Metrics::V1::ExportMetricsServiceRequest.encode(@request)
+    end
+
+    def record
+      @request.to_json
+    end
+  end
+
+  class Traces
+    def initialize(body)
+      @request =
+        if body.encoding == Encoding::BINARY
+          Opentelemetry::Proto::Collector::Trace::V1::ExportTraceServiceRequest.decode(body)
+        else
+          Opentelemetry::Proto::Collector::Trace::V1::ExportTraceServiceRequest.decode_json(body)
+        end
+    end
+
+    def encode
+      Opentelemetry::Proto::Collector::Trace::V1::ExportTraceServiceRequest.encode(@request)
+    end
+
+    def record
+      @request.to_json
     end
   end
 end
