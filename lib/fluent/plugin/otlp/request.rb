@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require 'fluent/plugin/otlp/constant'
-require 'google/protobuf'
-require 'opentelemetry/proto/collector/logs/v1/logs_service_pb.rb'
-require 'opentelemetry/proto/collector/metrics/v1/metrics_service_pb'
-require 'opentelemetry/proto/collector/trace/v1/trace_service_pb.rb'
+require "fluent/plugin/otlp/constant"
+require "google/protobuf"
+require "opentelemetry/proto/collector/logs/v1/logs_service_pb"
+require "opentelemetry/proto/collector/metrics/v1/metrics_service_pb"
+require "opentelemetry/proto/collector/trace/v1/trace_service_pb"
 
 module Fluent::Plugin::Otlp
   class Request

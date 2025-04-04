@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require 'fluent/plugin/otlp/constant'
-require 'google/protobuf'
-require 'opentelemetry/proto/collector/logs/v1/logs_service_pb.rb'
-require 'opentelemetry/proto/collector/metrics/v1/metrics_service_pb'
-require 'opentelemetry/proto/collector/trace/v1/trace_service_pb.rb'
+require "fluent/plugin/otlp/constant"
+require "google/protobuf"
+require "opentelemetry/proto/collector/logs/v1/logs_service_pb"
+require "opentelemetry/proto/collector/metrics/v1/metrics_service_pb"
+require "opentelemetry/proto/collector/trace/v1/trace_service_pb"
 
 module Fluent::Plugin::Otlp
   class Response
@@ -20,7 +20,7 @@ module Fluent::Plugin::Otlp
     end
 
     class Logs
-      def initialize(rejected: 0, error: '')
+      def initialize(rejected: 0, error: "")
         @response = Opentelemetry::Proto::Collector::Logs::V1::ExportLogsServiceResponse.new(
           partial_success: Opentelemetry::Proto::Collector::Logs::V1::ExportLogsPartialSuccess.new(
             rejected_log_records: rejected,
@@ -39,7 +39,7 @@ module Fluent::Plugin::Otlp
     end
 
     class Metrics
-      def initialize(rejected: 0, error: '')
+      def initialize(rejected: 0, error: "")
         @response = Opentelemetry::Proto::Collector::Metrics::V1::ExportMetricsServiceResponse.new(
           partial_success: Opentelemetry::Proto::Collector::Metrics::V1::ExportMetricsPartialSuccess.new(
             rejected_data_points: rejected,
@@ -58,7 +58,7 @@ module Fluent::Plugin::Otlp
     end
 
     class Traces
-      def initialize(rejected: 0, error: '')
+      def initialize(rejected: 0, error: "")
         @response = Opentelemetry::Proto::Collector::Trace::V1::ExportTraceServiceResponse.new(
           partial_success: Opentelemetry::Proto::Collector::Trace::V1::ExportTracePartialSuccess.new(
             rejected_spans: rejected,
