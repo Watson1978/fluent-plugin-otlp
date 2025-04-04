@@ -43,7 +43,7 @@ module Fluent::Plugin
     end
 
     def write(chunk)
-      uri, req = create_request(chunk)
+      uri, req = create_uri_request(chunk)
 
       Net::HTTP.start(uri.host, uri.port) do |http|
         http.request(req)
@@ -52,18 +52,18 @@ module Fluent::Plugin
 
     private
 
-    def create_request(chunk)
+    def create_uri_request(chunk)
       record = JSON.parse(chunk.read)
       msg = record["message"]
 
       case record["type"]
-      when "otlp_logs"
+      when Otlp::RECORD_TYPE_LOGS
         uri = HTTP_LOGS_ENDPOINT
         body = Otlp::Request::Logs.new(msg).encode
-      when "otlp_metrics"
+      when Otlp::RECORD_TYPE_METRICS
         uri = HTTP_METRICS_ENDPOINT
         body = Otlp::Request::Metrics.new(msg).encode
-      when "otlp_traces"
+      when Otlp::RECORD_TYPE_TRACES
         uri = HTTP_TRACES_ENDPOINT
         body = Otlp::Request::Traces.new(msg).encode
       end
@@ -73,7 +73,7 @@ module Fluent::Plugin
       req["Content-Type"] = Otlp::CONTENT_TYPE_PROTOBUF
 
       if @compress == :gzip
-        req["Content-Encoding"] = "gzip"
+        req["Content-Encoding"] = Otlp::CONTENT_ENCODING_GZIP
         gz = Zlib::GzipWriter.new(StringIO.new)
         gz << body
         body = gz.close.string

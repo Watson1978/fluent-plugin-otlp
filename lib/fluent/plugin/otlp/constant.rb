@@ -6,4 +6,8 @@ module Fluent::Plugin::Otlp
   CONTENT_TYPE_JSON = "application/json"
 
   CONTENT_ENCODING_GZIP = "gzip"
+
+  RECORD_TYPE_LOGS = "otlp_logs"
+  RECORD_TYPE_METRICS = "otlp_metrics"
+  RECORD_TYPE_TRACES = "otlp_traces"
 end
