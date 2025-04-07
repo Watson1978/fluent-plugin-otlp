@@ -27,6 +27,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   spec.add_dependency("async-http", "~> 0.88.0")
+  spec.add_dependency("excon", "~> 1.2")
   spec.add_dependency("fluentd", "~> 1.18")
   spec.add_dependency("google-protobuf", "~> 4.30")
 end

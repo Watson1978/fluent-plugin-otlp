@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "excon"
 require "fluent/plugin/otlp/constant"
 require "fluent/plugin/otlp/request"
 require "fluent/plugin/output"
@@ -21,8 +22,8 @@ module Fluent::Plugin
     config_section :http, required: false, multi: false, init: true, param_name: :http_config do
       desc "The endpoint"
       config_param :endpoint, :string, default: "http://127.0.0.1:4318"
-      desc 'The proxy for HTTP request'
-      config_param :proxy, :string, default: ENV['HTTP_PROXY'] || ENV['http_proxy']
+      desc "The proxy for HTTP request"
+      config_param :proxy, :string, default: ENV["HTTP_PROXY"] || ENV["http_proxy"]
     end
 
     desc "Compress request body"
@@ -40,8 +41,6 @@ module Fluent::Plugin
       OtlpOutput.const_set(:HTTP_LOGS_ENDPOINT, "#{@http_config.endpoint}/v1/logs".freeze)
       OtlpOutput.const_set(:HTTP_METRICS_ENDPOINT, "#{@http_config.endpoint}/v1/metrics".freeze)
       OtlpOutput.const_set(:HTTP_TRACES_ENDPOINT, "#{@http_config.endpoint}/v1/traces".freeze)
-
-      @http_proxy_uri = URI.parse(@http_config.proxy) if @http_config.proxy
     end
 
     def multi_workers_ready?
@@ -53,16 +52,16 @@ module Fluent::Plugin
     end
 
     def write(chunk)
-      uri, req = create_uri_request(chunk)
-
-      Net::HTTP.start(uri.host, uri.port, @http_proxy_uri&.host, @http_proxy_uri&.port, @http_proxy_uri&.user, @http_proxy_uri&.password) do |http|
-        http.request(req)
+      uri, connection = create_connection(chunk)
+      response = connection.post
+      if response.status != 200
+        log.error "got error response from '#{uri.to_s}'"
       end
     end
 
     private
 
-    def create_uri_request(chunk)
+    def create_connection(chunk)
       record = JSON.parse(chunk.read)
       msg = record["message"]
 
@@ -77,22 +76,19 @@ module Fluent::Plugin
         uri = HTTP_TRACES_ENDPOINT
         body = Otlp::Request::Traces.new(msg).encode
       else
-        raise "Unknown record type: #{record["type"]}"
+        raise "Unknown record type: #{record['type']}"
       end
 
-      uri = URI.parse(uri)
-      req = Net::HTTP::Post.new(uri.request_uri)
-      req["Content-Type"] = Otlp::CONTENT_TYPE_PROTOBUF
-
+      headers = { "Content-Type" => Otlp::CONTENT_TYPE_PROTOBUF }
       if @compress == :gzip
-        req["Content-Encoding"] = Otlp::CONTENT_ENCODING_GZIP
+        headers["Content-Encoding"] = Otlp::CONTENT_ENCODING_GZIP
         gz = Zlib::GzipWriter.new(StringIO.new)
         gz << body
         body = gz.close.string
       end
 
-      req.body = body
-      [uri, req]
+      connection = Excon.new(uri, body: body, headers: headers, proxy: @http_config.proxy, persistent: true)
+      [uri, connection]
     end
   end
 end
