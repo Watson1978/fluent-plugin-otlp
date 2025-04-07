@@ -21,10 +21,18 @@ module Fluent::Plugin
     config_section :http, required: false, multi: false, init: true, param_name: :http_config do
       desc "The endpoint"
       config_param :endpoint, :string, default: "http://127.0.0.1:4318"
+      desc 'The proxy for HTTP request'
+      config_param :proxy, :string, default: ENV['HTTP_PROXY'] || ENV['http_proxy']
     end
 
     desc "Compress request body"
     config_param :compress, :enum, list: %i[text gzip], default: :text
+
+    def initialize
+      super
+
+      @http_proxy_uri = nil
+    end
 
     def configure(conf)
       super
@@ -32,6 +40,8 @@ module Fluent::Plugin
       OtlpOutput.const_set(:HTTP_LOGS_ENDPOINT, "#{@http_config.endpoint}/v1/logs".freeze)
       OtlpOutput.const_set(:HTTP_METRICS_ENDPOINT, "#{@http_config.endpoint}/v1/metrics".freeze)
       OtlpOutput.const_set(:HTTP_TRACES_ENDPOINT, "#{@http_config.endpoint}/v1/traces".freeze)
+
+      @http_proxy_uri = URI.parse(@http_config.proxy) if @http_config.proxy
     end
 
     def multi_workers_ready?
@@ -45,7 +55,7 @@ module Fluent::Plugin
     def write(chunk)
       uri, req = create_uri_request(chunk)
 
-      Net::HTTP.start(uri.host, uri.port) do |http|
+      Net::HTTP.start(uri.host, uri.port, @http_proxy_uri&.host, @http_proxy_uri&.port, @http_proxy_uri&.user, @http_proxy_uri&.password) do |http|
         http.request(req)
       end
     end
@@ -66,6 +76,8 @@ module Fluent::Plugin
       when Otlp::RECORD_TYPE_TRACES
         uri = HTTP_TRACES_ENDPOINT
         body = Otlp::Request::Traces.new(msg).encode
+      else
+        raise "Unknown record type: #{record["type"]}"
       end
 
       uri = URI.parse(uri)
