@@ -22,6 +22,10 @@ module Fluent::Plugin
       config_param :port, :integer, default: 4318
     end
 
+    config_section :transport, required: false, multi: false, init: true, param_name: :transport_config do
+      config_argument :protocol, :enum, list: [:tls], default: nil
+    end
+
     class HttpHandler
       def logs(req, &block)
         common(req, Otlp::Request::Logs, Otlp::Response::Logs, &block)
