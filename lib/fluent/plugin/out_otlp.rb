@@ -35,12 +35,6 @@ module Fluent::Plugin
     desc "Compress request body"
     config_param :compress, :enum, list: %i[text gzip], default: :text
 
-    def initialize
-      super
-
-      @http_proxy_uri = nil
-    end
-
     def configure(conf)
       super
 
