@@ -47,7 +47,6 @@ module Fluent::Plugin
         @certs[:client_cert] = @transport_config.cert_path
         @certs[:client_key] = @transport_config.private_key_path
         @certs[:client_key_pass] = @transport_config.private_key_passphrase
-        @certs[:ssl_verify_peer] = false if @transport_config.insecure
         @certs[:ssl_version] = @transport_config.version
       end
     end
@@ -96,6 +95,7 @@ module Fluent::Plugin
         body = gz.close.string
       end
 
+      Excon.defaults[:ssl_verify_peer] = false if @transport_config.insecure
       connection = Excon.new(uri, body: body, headers: headers, proxy: @http_config.proxy, persistent: true, **@certs)
       [uri, connection]
     end
