@@ -13,6 +13,8 @@ module Fluent::Plugin
   class OtlpOutput < Output
     Fluent::Plugin.register_output("otlp", self)
 
+    helpers :server
+
     config_section :buffer do
       config_set_default :chunk_keys, ["tag"]
       config_set_default :flush_at_shutdown, true
@@ -24,6 +26,10 @@ module Fluent::Plugin
       config_param :endpoint, :string, default: "http://127.0.0.1:4318"
       desc "The proxy for HTTP request"
       config_param :proxy, :string, default: ENV["HTTP_PROXY"] || ENV["http_proxy"]
+    end
+
+    config_section :transport, required: false, multi: false, init: true, param_name: :transport_config do
+      config_argument :protocol, :enum, list: [:tls], default: nil
     end
 
     desc "Compress request body"
@@ -41,6 +47,15 @@ module Fluent::Plugin
       OtlpOutput.const_set(:HTTP_LOGS_ENDPOINT, "#{@http_config.endpoint}/v1/logs".freeze)
       OtlpOutput.const_set(:HTTP_METRICS_ENDPOINT, "#{@http_config.endpoint}/v1/metrics".freeze)
       OtlpOutput.const_set(:HTTP_TRACES_ENDPOINT, "#{@http_config.endpoint}/v1/traces".freeze)
+
+      @certs = {}
+      if @transport_config.protocol == :tls
+        @certs[:client_cert] = @transport_config.cert_path
+        @certs[:client_key] = @transport_config.private_key_path
+        @certs[:client_key_pass] = @transport_config.private_key_passphrase
+        @certs[:ssl_verify_peer] = false if @transport_config.insecure
+        @certs[:ssl_version] = @transport_config.version
+      end
     end
 
     def multi_workers_ready?
@@ -87,7 +102,7 @@ module Fluent::Plugin
         body = gz.close.string
       end
 
-      connection = Excon.new(uri, body: body, headers: headers, proxy: @http_config.proxy, persistent: true)
+      connection = Excon.new(uri, body: body, headers: headers, proxy: @http_config.proxy, persistent: true, **@certs)
       [uri, connection]
     end
   end
