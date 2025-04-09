@@ -29,9 +29,9 @@ module Fluent::Plugin
       desc "The proxy for HTTP request"
       config_param :proxy, :string, default: ENV["HTTP_PROXY"] || ENV["http_proxy"]
 
-      desc 'Raise UnrecoverableError when the response is non success, 4xx/5xx'
+      desc "Raise UnrecoverableError when the response is non success, 4xx/5xx"
       config_param :error_response_as_unrecoverable, :bool, default: true
-      desc 'The list of retryable response code'
+      desc "The list of retryable response code"
       config_param :retryable_response_codes, :array, value_type: :integer, default: nil
     end
 
