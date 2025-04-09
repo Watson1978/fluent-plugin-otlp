@@ -53,6 +53,7 @@ module Fluent::Plugin
         begin
           record = request_class.new(body).record
         rescue Google::Protobuf::ParseError
+          # The format in request body does not comply with the OpenTelemetry protocol.
           return response_bad_request(content_type)
         end
 

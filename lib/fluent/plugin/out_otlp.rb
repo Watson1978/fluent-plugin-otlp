@@ -85,18 +85,21 @@ module Fluent::Plugin
       record = JSON.parse(chunk.read)
       msg = record["message"]
 
-      case record["type"]
-      when Otlp::RECORD_TYPE_LOGS
-        uri = HTTP_LOGS_ENDPOINT
-        body = Otlp::Request::Logs.new(msg).encode
-      when Otlp::RECORD_TYPE_METRICS
-        uri = HTTP_METRICS_ENDPOINT
-        body = Otlp::Request::Metrics.new(msg).encode
-      when Otlp::RECORD_TYPE_TRACES
-        uri = HTTP_TRACES_ENDPOINT
-        body = Otlp::Request::Traces.new(msg).encode
-      else
-        raise "Unknown record type: #{record['type']}"
+      begin
+        case record["type"]
+        when Otlp::RECORD_TYPE_LOGS
+          uri = HTTP_LOGS_ENDPOINT
+          body = Otlp::Request::Logs.new(msg).encode
+        when Otlp::RECORD_TYPE_METRICS
+          uri = HTTP_METRICS_ENDPOINT
+          body = Otlp::Request::Metrics.new(msg).encode
+        when Otlp::RECORD_TYPE_TRACES
+          uri = HTTP_TRACES_ENDPOINT
+          body = Otlp::Request::Traces.new(msg).encode
+        end
+      rescue Google::Protobuf::ParseError => e
+        # The message format does not comply with the OpenTelemetry protocol.
+        raise ::Fluent::UnrecoverableError, e.message
       end
 
       headers = { "Content-Type" => Otlp::CONTENT_TYPE_PROTOBUF }
