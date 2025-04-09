@@ -52,13 +52,13 @@ module Fluent::Plugin
       OtlpOutput.const_set(:HTTP_METRICS_ENDPOINT, "#{@http_config.endpoint}/v1/metrics".freeze)
       OtlpOutput.const_set(:HTTP_TRACES_ENDPOINT, "#{@http_config.endpoint}/v1/traces".freeze)
 
-      @certs = {}
+      @tls_settings = {}
       if @transport_config.protocol == :tls
-        @certs[:client_cert] = @transport_config.cert_path
-        @certs[:client_key] = @transport_config.private_key_path
-        @certs[:client_key_pass] = @transport_config.private_key_passphrase
-        @certs[:ssl_min_version] = TLS_VERSIONS_MAP[@transport_config.min_version.to_sym]
-        @certs[:ssl_max_version] = TLS_VERSIONS_MAP[@transport_config.max_version.to_sym]
+        @tls_settings[:client_cert] = @transport_config.cert_path
+        @tls_settings[:client_key] = @transport_config.private_key_path
+        @tls_settings[:client_key_pass] = @transport_config.private_key_passphrase
+        @tls_settings[:ssl_min_version] = TLS_VERSIONS_MAP[@transport_config.min_version.to_sym]
+        @tls_settings[:ssl_max_version] = TLS_VERSIONS_MAP[@transport_config.max_version.to_sym]
       end
     end
 
@@ -107,7 +107,7 @@ module Fluent::Plugin
       end
 
       Excon.defaults[:ssl_verify_peer] = false if @transport_config.insecure
-      connection = Excon.new(uri, body: body, headers: headers, proxy: @http_config.proxy, persistent: true, **@certs)
+      connection = Excon.new(uri, body: body, headers: headers, proxy: @http_config.proxy, persistent: true, **@tls_settings)
       [uri, connection]
     end
   end
