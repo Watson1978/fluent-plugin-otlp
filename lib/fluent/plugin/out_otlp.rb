@@ -11,6 +11,8 @@ require "zlib"
 
 module Fluent::Plugin
   class OtlpOutput < Output
+    class RetryableResponse < StandardError; end
+
     Fluent::Plugin.register_output("otlp", self)
 
     helpers :server
@@ -26,6 +28,11 @@ module Fluent::Plugin
       config_param :endpoint, :string, default: "http://127.0.0.1:4318"
       desc "The proxy for HTTP request"
       config_param :proxy, :string, default: ENV["HTTP_PROXY"] || ENV["http_proxy"]
+
+      desc 'Raise UnrecoverableError when the response is non success, 4xx/5xx'
+      config_param :error_response_as_unrecoverable, :bool, default: true
+      desc 'The list of retryable response code'
+      config_param :retryable_response_codes, :array, value_type: :integer, default: nil
     end
 
     config_section :transport, required: false, multi: false, init: true, param_name: :transport_config do
@@ -63,8 +70,17 @@ module Fluent::Plugin
     def write(chunk)
       uri, connection = create_connection(chunk)
       response = connection.post
+
       if response.status != 200
-        log.error "got error response from '#{uri.to_s}'"
+        if @http_config.retryable_response_codes&.include?(response.status)
+          raise RetryableResponse, msg
+        end
+
+        if @http_config.error_response_as_unrecoverable
+          raise Fluent::UnrecoverableError, msg
+        else
+          log.error "got error response from '#{uri.to_s}'"
+        end
       end
     end
 
