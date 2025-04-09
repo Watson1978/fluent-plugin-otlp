@@ -1,0 +1,120 @@
+{
+  "resourceMetrics": [
+    {
+      "resource": {
+        "attributes": [
+          {
+            "key": "service.name",
+            "value": {
+              "stringValue": "test-unit"
+            }
+          },
+          {
+            "key": "process.pid",
+            "value": {
+              "intValue": "28670"
+            }
+          },
+          {
+            "key": "process.command",
+            "value": {
+              "stringValue": "metrics.rb"
+            }
+          },
+          {
+            "key": "process.runtime.name",
+            "value": {
+              "stringValue": "ruby"
+            }
+          },
+          {
+            "key": "process.runtime.version",
+            "value": {
+              "stringValue": "3.4.2"
+            }
+          },
+          {
+            "key": "process.runtime.description",
+            "value": {
+              "stringValue": "ruby 3.4.2 (2025-02-15 revision d2930f8e7a) +PRISM [x86_64-linux]"
+            }
+          },
+          {
+            "key": "telemetry.sdk.name",
+            "value": {
+              "stringValue": "opentelemetry"
+            }
+          },
+          {
+            "key": "telemetry.sdk.language",
+            "value": {
+              "stringValue": "ruby"
+            }
+          },
+          {
+            "key": "telemetry.sdk.version",
+            "value": {
+              "stringValue": "1.8.0"
+            }
+          }
+        ]
+      },
+      "scopeMetrics": [
+        {
+          "scope": {
+            "name": "SAMPLE_METER_NAME"
+          },
+          "metrics": [
+            {
+              "name": "gauge",
+              "description": "desscription",
+              "unit": "cpu",
+              "gauge": {
+                "dataPoints": [
+                  {
+                    "startTimeUnixNano": "1744246311257468167",
+                    "timeUnixNano": "1744246311257652701",
+                    "asInt": "67",
+                    "attributes": [
+                      {
+                        "key": "cpuid",
+                        "value": {
+                          "stringValue": "1"
+                        }
+                      },
+                      {
+                        "key": "type",
+                        "value": {
+                          "stringValue": "user"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "startTimeUnixNano": "1744246311257468167",
+                    "timeUnixNano": "1744246311257652701",
+                    "asInt": "42",
+                    "attributes": [
+                      {
+                        "key": "cpuid",
+                        "value": {
+                          "stringValue": "2"
+                        }
+                      },
+                      {
+                        "key": "type",
+                        "value": {
+                          "stringValue": "user"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

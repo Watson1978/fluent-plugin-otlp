@@ -1,0 +1,233 @@
+{
+  "resourceSpans": [
+    {
+      "resource": {
+        "attributes": [
+          {
+            "key": "service.name",
+            "value": {
+              "stringValue": "test-unit"
+            }
+          },
+          {
+            "key": "process.pid",
+            "value": {
+              "intValue": "20866"
+            }
+          },
+          {
+            "key": "process.command",
+            "value": {
+              "stringValue": "traces.rb"
+            }
+          },
+          {
+            "key": "process.runtime.name",
+            "value": {
+              "stringValue": "ruby"
+            }
+          },
+          {
+            "key": "process.runtime.version",
+            "value": {
+              "stringValue": "3.4.2"
+            }
+          },
+          {
+            "key": "process.runtime.description",
+            "value": {
+              "stringValue": "ruby 3.4.2 (2025-02-15 revision d2930f8e7a) +PRISM [x86_64-linux]"
+            }
+          },
+          {
+            "key": "telemetry.sdk.name",
+            "value": {
+              "stringValue": "opentelemetry"
+            }
+          },
+          {
+            "key": "telemetry.sdk.language",
+            "value": {
+              "stringValue": "ruby"
+            }
+          },
+          {
+            "key": "telemetry.sdk.version",
+            "value": {
+              "stringValue": "1.8.0"
+            }
+          },
+          {
+            "key": "service.version",
+            "value": {
+              "stringValue": "1.0.0"
+            }
+          },
+          {
+            "key": "deployment.environment",
+            "value": {
+              "stringValue": "development"
+            }
+          },
+          {
+            "key": "host.name",
+            "value": {
+              "stringValue": "UM890"
+            }
+          }
+        ]
+      },
+      "scopeSpans": [
+        {
+          "scope": {
+            "name": "test-unit"
+          },
+          "spans": [
+            {
+              "traceId": "DL+yMvjrfijVOmEeQ/SNdg==",
+              "spanId": "YbHZMFO94So=",
+              "parentSpanId": "5w9OV0etQ/4=",
+              "name": "child",
+              "kind": "SPAN_KIND_INTERNAL",
+              "startTimeUnixNano": "1744245802627885349",
+              "endTimeUnixNano": "1744245803644211336",
+              "attributes": [
+                {
+                  "key": "myname",
+                  "value": {
+                    "stringValue": "child-1-1"
+                  }
+                },
+                {
+                  "key": "parameter",
+                  "value": {
+                    "stringValue": "1744245802.62789"
+                  }
+                }
+              ],
+              "status": {}
+            },
+            {
+              "traceId": "DL+yMvjrfijVOmEeQ/SNdg==",
+              "spanId": "vGd2sKhJ2tk=",
+              "parentSpanId": "5w9OV0etQ/4=",
+              "name": "child",
+              "kind": "SPAN_KIND_INTERNAL",
+              "startTimeUnixNano": "1744245803644291396",
+              "endTimeUnixNano": "1744245804558991145",
+              "attributes": [
+                {
+                  "key": "myname",
+                  "value": {
+                    "stringValue": "child-1-2"
+                  }
+                },
+                {
+                  "key": "parameter",
+                  "value": {
+                    "stringValue": "1744245803.6443033"
+                  }
+                }
+              ],
+              "status": {}
+            },
+            {
+              "traceId": "DL+yMvjrfijVOmEeQ/SNdg==",
+              "spanId": "5w9OV0etQ/4=",
+              "name": "main",
+              "kind": "SPAN_KIND_INTERNAL",
+              "startTimeUnixNano": "1744245802627824756",
+              "endTimeUnixNano": "1744245804559015561",
+              "attributes": [
+                {
+                  "key": "myname",
+                  "value": {
+                    "stringValue": "parent-1"
+                  }
+                },
+                {
+                  "key": "parameter",
+                  "value": {
+                    "stringValue": "1744245802.6278532"
+                  }
+                }
+              ],
+              "status": {}
+            },
+            {
+              "traceId": "BuNI/5wXD/U2aX5In6nZpQ==",
+              "spanId": "2Dnqyce2fVs=",
+              "parentSpanId": "DR5CFK2F/5c=",
+              "name": "child",
+              "kind": "SPAN_KIND_INTERNAL",
+              "startTimeUnixNano": "1744245804559099539",
+              "endTimeUnixNano": "1744245805509995290",
+              "attributes": [
+                {
+                  "key": "myname",
+                  "value": {
+                    "stringValue": "child-2-1"
+                  }
+                },
+                {
+                  "key": "parameter",
+                  "value": {
+                    "stringValue": "1744245804.5591033"
+                  }
+                }
+              ],
+              "status": {}
+            },
+            {
+              "traceId": "BuNI/5wXD/U2aX5In6nZpQ==",
+              "spanId": "B57K4ljxtbQ=",
+              "parentSpanId": "DR5CFK2F/5c=",
+              "name": "child",
+              "kind": "SPAN_KIND_INTERNAL",
+              "startTimeUnixNano": "1744245805510109253",
+              "endTimeUnixNano": "1744245805688236833",
+              "attributes": [
+                {
+                  "key": "myname",
+                  "value": {
+                    "stringValue": "child-2-2"
+                  }
+                },
+                {
+                  "key": "parameter",
+                  "value": {
+                    "stringValue": "1744245805.5101347"
+                  }
+                }
+              ],
+              "status": {}
+            },
+            {
+              "traceId": "BuNI/5wXD/U2aX5In6nZpQ==",
+              "spanId": "DR5CFK2F/5c=",
+              "name": "main",
+              "kind": "SPAN_KIND_INTERNAL",
+              "startTimeUnixNano": "1744245804559060746",
+              "endTimeUnixNano": "1744245805688260848",
+              "attributes": [
+                {
+                  "key": "myname",
+                  "value": {
+                    "stringValue": "parent-2"
+                  }
+                },
+                {
+                  "key": "parameter",
+                  "value": {
+                    "stringValue": "1744245804.5590777"
+                  }
+                }
+              ],
+              "status": {}
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -10,10 +10,10 @@ class Fluent::Plugin::Otlp::Request
   class Logs
     def initialize(body)
       @request =
-        if body.encoding == Encoding::BINARY
-          Opentelemetry::Proto::Collector::Logs::V1::ExportLogsServiceRequest.decode(body)
-        else
+        if body.start_with?("{")
           Opentelemetry::Proto::Collector::Logs::V1::ExportLogsServiceRequest.decode_json(body)
+        else
+          Opentelemetry::Proto::Collector::Logs::V1::ExportLogsServiceRequest.decode(body)
         end
     end
 
@@ -29,10 +29,10 @@ class Fluent::Plugin::Otlp::Request
   class Metrics
     def initialize(body)
       @request =
-        if body.encoding == Encoding::BINARY
-          Opentelemetry::Proto::Collector::Metrics::V1::ExportMetricsServiceRequest.decode(body)
-        else
+        if body.start_with?("{")
           Opentelemetry::Proto::Collector::Metrics::V1::ExportMetricsServiceRequest.decode_json(body)
+        else
+          Opentelemetry::Proto::Collector::Metrics::V1::ExportMetricsServiceRequest.decode(body)
         end
     end
 
@@ -48,10 +48,10 @@ class Fluent::Plugin::Otlp::Request
   class Traces
     def initialize(body)
       @request =
-        if body.encoding == Encoding::BINARY
-          Opentelemetry::Proto::Collector::Trace::V1::ExportTraceServiceRequest.decode(body)
-        else
+        if body.start_with?("{")
           Opentelemetry::Proto::Collector::Trace::V1::ExportTraceServiceRequest.decode_json(body)
+        else
+          Opentelemetry::Proto::Collector::Trace::V1::ExportTraceServiceRequest.decode(body)
         end
     end
 
