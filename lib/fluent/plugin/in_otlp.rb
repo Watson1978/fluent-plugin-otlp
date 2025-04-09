@@ -4,7 +4,22 @@ require "fluent/plugin/input"
 require "fluent/plugin/otlp/constant"
 require "fluent/plugin/otlp/request"
 require "fluent/plugin/otlp/response"
+require "fluent/plugin_helper/http_server"
 require "zlib"
+
+unless Fluent::PluginHelper::HttpServer::Request.method_defined?(:headers)
+  module Fluent::PluginHelper::HttpServer
+    module Extension
+      refine Request do
+        def headers
+          @request.headers
+        end
+      end
+    end
+  end
+
+  using Fluent::PluginHelper::HttpServer::Extension
+end
 
 module Fluent::Plugin
   class OtlpInput < Input
