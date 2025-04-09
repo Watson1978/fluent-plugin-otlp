@@ -47,8 +47,8 @@ module Fluent::Plugin
         @tls_settings[:client_cert] = @transport_config.cert_path
         @tls_settings[:client_key] = @transport_config.private_key_path
         @tls_settings[:client_key_pass] = @transport_config.private_key_passphrase
-        @tls_settings[:ssl_min_version] = Otlp::TLS_VERSIONS_MAP[@transport_config.min_version.to_sym]
-        @tls_settings[:ssl_max_version] = Otlp::TLS_VERSIONS_MAP[@transport_config.max_version.to_sym]
+        @tls_settings[:ssl_min_version] = Otlp::TLS_VERSIONS_MAP[@transport_config.min_version]
+        @tls_settings[:ssl_max_version] = Otlp::TLS_VERSIONS_MAP[@transport_config.max_version]
       end
     end
 
