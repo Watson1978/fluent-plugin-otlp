@@ -35,6 +35,16 @@ module Fluent::Plugin
     desc "Compress request body"
     config_param :compress, :enum, list: %i[text gzip], default: :text
 
+    TLS_VERSIONS_MAP = begin
+                         map = {
+                           TLSv1: OpenSSL::SSL::TLS1_VERSION,
+                           TLSv1_1: OpenSSL::SSL::TLS1_1_VERSION,
+                           TLSv1_2: OpenSSL::SSL::TLS1_2_VERSION
+                         }
+                         map[:TLSv1_3] = OpenSSL::SSL::TLS1_3_VERSION if defined?(OpenSSL::SSL::TLS1_3_VERSION)
+                         map.freeze
+                       end
+
     def configure(conf)
       super
 
@@ -47,7 +57,8 @@ module Fluent::Plugin
         @certs[:client_cert] = @transport_config.cert_path
         @certs[:client_key] = @transport_config.private_key_path
         @certs[:client_key_pass] = @transport_config.private_key_passphrase
-        @certs[:ssl_version] = @transport_config.version
+        @certs[:ssl_min_version] = TLS_VERSIONS_MAP[@transport_config.min_version.to_sym]
+        @certs[:ssl_max_version] = TLS_VERSIONS_MAP[@transport_config.max_version.to_sym]
       end
     end
 
