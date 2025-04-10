@@ -5,7 +5,6 @@ require "fluent/plugin/otlp/constant"
 require "fluent/plugin/otlp/request"
 require "fluent/plugin/output"
 require "json"
-require "net/http"
 require "uri"
 require "zlib"
 
