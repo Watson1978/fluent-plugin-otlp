@@ -1,9 +1,10 @@
 # frozen_string_literal: true
 
-require "excon"
 require "fluent/plugin/otlp/constant"
 require "fluent/plugin/otlp/request"
 require "fluent/plugin/output"
+
+require "excon"
 require "json"
 require "uri"
 require "zlib"

@@ -5,6 +5,7 @@ require "fluent/plugin/otlp/constant"
 require "fluent/plugin/otlp/request"
 require "fluent/plugin/otlp/response"
 require "fluent/plugin_helper/http_server"
+
 require "zlib"
 
 unless Fluent::PluginHelper::HttpServer::Request.method_defined?(:headers)
