@@ -1,0 +1,33 @@
+{
+  "resourceLogs": [
+    {
+      "resource": {},
+      "scopeLogs": [
+        {
+          "scope": {
+            "name": "test-unit",
+            "version": "0.0.0"
+          },
+          "logRecords": [
+            {
+              "timeUnixNano": "1744261044119140009",
+              "severityText": "INFO",
+              "body": {
+                "stringValue": "This is sample log."
+              },
+              "attributes": [
+                {
+                  "key": "cedar",
+                  "value": {
+                    "boolValue": true
+                  }
+                }
+              ],
+              "observedTimeUnixNano": "1744261044119142403"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
