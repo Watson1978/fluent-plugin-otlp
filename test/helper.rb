@@ -8,6 +8,7 @@ require "fluent/test/helpers"
 
 require "excon"
 require "json"
+require "stringio"
 require "test-unit"
 require "timecop"
 require "zlib"

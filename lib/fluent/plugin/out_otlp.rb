@@ -6,7 +6,7 @@ require "fluent/plugin/output"
 
 require "excon"
 require "json"
-require "uri"
+require "stringio"
 require "zlib"
 
 module Fluent::Plugin
