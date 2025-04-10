@@ -107,9 +107,9 @@ module Fluent::Plugin
         raise ::Fluent::UnrecoverableError, e.message
       end
 
-      headers = { "Content-Type" => Otlp::CONTENT_TYPE_PROTOBUF }
+      headers = { Otlp::CONTENT_TYPE => Otlp::CONTENT_TYPE_PROTOBUF }
       if @compress == :gzip
-        headers["Content-Encoding"] = Otlp::CONTENT_ENCODING_GZIP
+        headers[Otlp::CONTENT_ENCODING] = Otlp::CONTENT_ENCODING_GZIP
         gz = Zlib::GzipWriter.new(StringIO.new)
         gz << body
         body = gz.close.string

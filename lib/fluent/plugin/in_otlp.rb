@@ -95,7 +95,7 @@ module Fluent::Plugin
       end
 
       def response(code, content_type, body)
-        [code, { "Content-Type" => content_type }, body]
+        [code, { Otlp::CONTENT_TYPE => content_type }, body]
       end
 
       def response_unsupported_media_type
