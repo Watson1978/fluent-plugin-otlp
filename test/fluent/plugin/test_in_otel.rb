@@ -63,12 +63,21 @@ class Fluent::Plugin::OtlpInputTest < Test::Unit::TestCase
   def test_receive_compressed_json
     d = create_driver
     res = d.run(expect_records: 1) do
-      post_json("/v1/metrics", compress(TestData::JSON::METRICS), { "Content-Encoding" => "gzip" })
+      post_json("/v1/logs", compress(TestData::JSON::LOGS), { "Content-Encoding" => "gzip" })
     end
 
     assert_equal(200, res.status)
     assert_equal("otlp.test", d.events[0][0])
-    assert_equal({ type: "otlp_metrics", message: TestData::JSON::METRICS }, d.events[0][2])
+    assert_equal({ type: "otlp_logs", message: TestData::JSON::LOGS }, d.events[0][2])
+  end
+
+  def test_invalid_json
+    d = create_driver
+    res = d.run(expect_records: 0) do
+      post_json("/v1/logs", TestData::JSON::INVALID)
+    end
+
+    assert_equal(400, res.status)
   end
 
   data("metrics" => {
@@ -103,12 +112,39 @@ class Fluent::Plugin::OtlpInputTest < Test::Unit::TestCase
   def test_receive_compressed_protocol_buffers
     d = create_driver
     res = d.run(expect_records: 1) do
-      post_json("/v1/metrics", compress(TestData::ProtocolBuffers::METRICS), { "Content-Encoding" => "gzip" })
+      post_json("/v1/logs", compress(TestData::ProtocolBuffers::LOGS), { "Content-Encoding" => "gzip" })
     end
 
     assert_equal(200, res.status)
     assert_equal("otlp.test", d.events[0][0])
-    assert_equal({ type: "otlp_metrics", message: TestData::JSON::METRICS }, d.events[0][2])
+    assert_equal({ type: "otlp_logs", message: TestData::JSON::LOGS }, d.events[0][2])
+  end
+
+  def test_invalid_protocol_buffers
+    d = create_driver
+    res = d.run(expect_records: 0) do
+      post_json("/v1/logs", TestData::ProtocolBuffers::INVALID)
+    end
+
+    assert_equal(400, res.status)
+  end
+
+  def test_invalid_content_type
+    d = create_driver
+    res = d.run(expect_records: 0) do
+      post("/v1/logs", TestData::JSON::LOGS, { "Content-Type" => "text/plain" })
+    end
+
+    assert_equal(415, res.status)
+  end
+
+  def test_invalid_content_encoding
+    d = create_driver
+    res = d.run(expect_records: 0) do
+      post_json("/v1/logs", TestData::JSON::LOGS, { "Content-Encoding" => "deflate" })
+    end
+
+    assert_equal(400, res.status)
   end
 
   def compress(data)
