@@ -18,6 +18,16 @@ class Fluent::Plugin::OtlpInputTest < Test::Unit::TestCase
 
   def setup
     Fluent::Test.setup
+
+    # Enable mock_process_clock for freezing Fluent::EventTime
+    Timecop.mock_process_clock = true
+    Timecop.freeze(Time.parse("2025-01-01 00:00:00 UTC"))
+    @event_time = Fluent::EventTime.now
+  end
+
+  def teardown
+    Timecop.mock_process_clock = false
+    Timecop.return
   end
 
   def create_driver(conf = config)
@@ -55,9 +65,9 @@ class Fluent::Plugin::OtlpInputTest < Test::Unit::TestCase
       post_json(data[:request_path], data[:request_data])
     end
 
+    expected_events = [["otlp.test", @event_time, { type: data[:record_type], message: data[:record_data] }]]
     assert_equal(200, res.status)
-    assert_equal("otlp.test", d.events[0][0])
-    assert_equal({ type: data[:record_type], message: data[:record_data] }, d.events[0][2])
+    assert_equal(expected_events, d.events)
   end
 
   def test_receive_compressed_json
@@ -66,9 +76,9 @@ class Fluent::Plugin::OtlpInputTest < Test::Unit::TestCase
       post_json("/v1/logs", compress(TestData::JSON::LOGS), { "Content-Encoding" => "gzip" })
     end
 
+    expected_events = [["otlp.test", @event_time, { type: "otlp_logs", message: TestData::JSON::LOGS }]]
     assert_equal(200, res.status)
-    assert_equal("otlp.test", d.events[0][0])
-    assert_equal({ type: "otlp_logs", message: TestData::JSON::LOGS }, d.events[0][2])
+    assert_equal(expected_events, d.events)
   end
 
   def test_invalid_json
@@ -104,9 +114,9 @@ class Fluent::Plugin::OtlpInputTest < Test::Unit::TestCase
       post_protobuf(data[:request_path], data[:request_data])
     end
 
+    expected_events = [["otlp.test", @event_time, { type: data[:record_type], message: data[:record_data] }]]
     assert_equal(200, res.status)
-    assert_equal("otlp.test", d.events[0][0])
-    assert_equal({ type: data[:record_type], message: data[:record_data] }, d.events[0][2])
+    assert_equal(expected_events, d.events)
   end
 
   def test_receive_compressed_protocol_buffers
@@ -115,9 +125,9 @@ class Fluent::Plugin::OtlpInputTest < Test::Unit::TestCase
       post_json("/v1/logs", compress(TestData::ProtocolBuffers::LOGS), { "Content-Encoding" => "gzip" })
     end
 
+    expected_events = [["otlp.test", @event_time, { type: "otlp_logs", message: TestData::JSON::LOGS }]]
     assert_equal(200, res.status)
-    assert_equal("otlp.test", d.events[0][0])
-    assert_equal({ type: "otlp_logs", message: TestData::JSON::LOGS }, d.events[0][2])
+    assert_equal(expected_events, d.events)
   end
 
   def test_invalid_protocol_buffers
