@@ -28,19 +28,27 @@ class Fluent::Plugin::OtlpOutputTest < Test::Unit::TestCase
     config
   end
 
+  def server_request
+    @@server_request
+  end
+
+  def set_server_response_code(code)
+    @@server_response_code = code
+  end
+
   def run_http_server
     server = ::WEBrick::HTTPServer.new(server_config)
     server.mount_proc("/v1/metrics") do |req, res|
       @@server_request = ServerRequest.new(req.request_method.dup, req.path.dup, req.header.dup, req.body.dup)
-      res.status = 200
+      res.status = @@server_response_code
     end
     server.mount_proc("/v1/traces") do |req, res|
       @@server_request = ServerRequest.new(req.request_method.dup, req.path.dup, req.header.dup, req.body.dup)
-      res.status = 200
+      res.status = @@server_response_code
     end
     server.mount_proc("/v1/logs") do |req, res|
       @@server_request = ServerRequest.new(req.request_method.dup, req.path.dup, req.header.dup, req.body.dup)
-      res.status = 200
+      res.status = @@server_response_code
     end
     server.start
   ensure
@@ -55,6 +63,7 @@ class Fluent::Plugin::OtlpOutputTest < Test::Unit::TestCase
     Fluent::Test.setup
 
     @@server_request = nil
+    @@server_response_code = 200
     @@http_server_thread ||= Thread.new do
       run_http_server
     end
@@ -62,6 +71,7 @@ class Fluent::Plugin::OtlpOutputTest < Test::Unit::TestCase
 
   def teardown
     @@server_request = nil
+    @@server_response_code = 200
   end
 
   def create_driver(conf = config)
@@ -81,10 +91,10 @@ class Fluent::Plugin::OtlpOutputTest < Test::Unit::TestCase
       d.feed(event)
     end
 
-    assert_equal("/v1/logs", @@server_request.path)
-    assert_equal("POST", @@server_request.request_method)
-    assert_equal(["application/x-protobuf"], @@server_request.header["content-type"])
-    assert_equal(TestData::ProtocolBuffers::LOGS, @@server_request.body)
+    assert_equal("/v1/logs", server_request.path)
+    assert_equal("POST", server_request.request_method)
+    assert_equal(["application/x-protobuf"], server_request.header["content-type"])
+    assert_equal(TestData::ProtocolBuffers::LOGS, server_request.body)
   end
 
   def test_send_metrics
@@ -95,10 +105,10 @@ class Fluent::Plugin::OtlpOutputTest < Test::Unit::TestCase
       d.feed(event)
     end
 
-    assert_equal("/v1/metrics", @@server_request.path)
-    assert_equal("POST", @@server_request.request_method)
-    assert_equal(["application/x-protobuf"], @@server_request.header["content-type"])
-    assert_equal(TestData::ProtocolBuffers::METRICS, @@server_request.body)
+    assert_equal("/v1/metrics", server_request.path)
+    assert_equal("POST", server_request.request_method)
+    assert_equal(["application/x-protobuf"], server_request.header["content-type"])
+    assert_equal(TestData::ProtocolBuffers::METRICS, server_request.body)
   end
 
   def test_send_traces
@@ -109,10 +119,10 @@ class Fluent::Plugin::OtlpOutputTest < Test::Unit::TestCase
       d.feed(event)
     end
 
-    assert_equal("/v1/traces", @@server_request.path)
-    assert_equal("POST", @@server_request.request_method)
-    assert_equal(["application/x-protobuf"], @@server_request.header["content-type"])
-    assert_equal(TestData::ProtocolBuffers::TRACES, @@server_request.body)
+    assert_equal("/v1/traces", server_request.path)
+    assert_equal("POST", server_request.request_method)
+    assert_equal(["application/x-protobuf"], server_request.header["content-type"])
+    assert_equal(TestData::ProtocolBuffers::TRACES, server_request.body)
   end
 
   def test_send_compressed_message
@@ -123,12 +133,24 @@ class Fluent::Plugin::OtlpOutputTest < Test::Unit::TestCase
       d.feed(event)
     end
 
-    assert_equal("/v1/logs", @@server_request.path)
-    assert_equal("POST", @@server_request.request_method)
-    assert_equal(["application/x-protobuf"], @@server_request.header["content-type"])
-    assert_equal(["gzip"], @@server_request.header["content-encoding"])
-    assert_equal(TestData::ProtocolBuffers::LOGS, decompress(@@server_request.body).force_encoding(Encoding::ASCII_8BIT))
+    assert_equal("/v1/logs", server_request.path)
+    assert_equal("POST", server_request.request_method)
+    assert_equal(["application/x-protobuf"], server_request.header["content-type"])
+    assert_equal(["gzip"], server_request.header["content-encoding"])
+    assert_equal(TestData::ProtocolBuffers::LOGS, decompress(server_request.body).force_encoding(Encoding::ASCII_8BIT))
   end
+
+  def test_illigal
+    set_server_response_code(500)
+    event = { "type" => "otlp_logs", "message" => TestData::JSON::LOGS }
+
+    d = create_driver
+    d.run(default_tag: "otlp.test") do
+      d.feed(event)
+    end
+  end
+
+
 
   def decompress(data)
     Zlib::GzipReader.new(StringIO.new(data)).read
