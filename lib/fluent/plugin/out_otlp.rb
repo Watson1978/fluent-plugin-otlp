@@ -45,10 +45,6 @@ module Fluent::Plugin
     def configure(conf)
       super
 
-      OtlpOutput.const_set(:HTTP_LOGS_ENDPOINT, "#{@http_config.endpoint}/v1/logs".freeze)
-      OtlpOutput.const_set(:HTTP_METRICS_ENDPOINT, "#{@http_config.endpoint}/v1/metrics".freeze)
-      OtlpOutput.const_set(:HTTP_TRACES_ENDPOINT, "#{@http_config.endpoint}/v1/traces".freeze)
-
       @tls_settings = {}
       if @transport_config.protocol == :tls
         @tls_settings[:client_cert] = @transport_config.cert_path
@@ -86,6 +82,18 @@ module Fluent::Plugin
 
     private
 
+    def http_logs_endpoint
+      "#{@http_config.endpoint}/v1/logs"
+    end
+
+    def http_metrics_endpoint
+      "#{@http_config.endpoint}/v1/metrics"
+    end
+
+    def http_traces_endpoint
+      "#{@http_config.endpoint}/v1/traces"
+    end
+
     def create_connection(chunk)
       record = JSON.parse(chunk.read)
       msg = record["message"]
@@ -93,13 +101,13 @@ module Fluent::Plugin
       begin
         case record["type"]
         when Otlp::RECORD_TYPE_LOGS
-          uri = HTTP_LOGS_ENDPOINT
+          uri = http_logs_endpoint
           body = Otlp::Request::Logs.new(msg).encode
         when Otlp::RECORD_TYPE_METRICS
-          uri = HTTP_METRICS_ENDPOINT
+          uri = http_metrics_endpoint
           body = Otlp::Request::Metrics.new(msg).encode
         when Otlp::RECORD_TYPE_TRACES
-          uri = HTTP_TRACES_ENDPOINT
+          uri = http_traces_endpoint
           body = Otlp::Request::Traces.new(msg).encode
         end
       rescue Google::Protobuf::ParseError => e
