@@ -140,17 +140,65 @@ class Fluent::Plugin::OtlpOutputTest < Test::Unit::TestCase
     assert_equal(TestData::ProtocolBuffers::LOGS, decompress(server_request.body).force_encoding(Encoding::ASCII_8BIT))
   end
 
-  def test_illigal
+  def test_unrecoverable_error
     set_server_response_code(500)
     event = { "type" => "otlp_logs", "message" => TestData::JSON::LOGS }
 
     d = create_driver
-    d.run(default_tag: "otlp.test") do
+    d.run(default_tag: "otlp.test", shutdown: false) do
       d.feed(event)
     end
+
+    assert_match(%r{got unrecoverable error response from 'http://127.0.0.1:4318/v1/logs', response code is 500},
+                 d.instance.log.out.logs.join)
+
+    d.instance_shutdown
   end
 
+  def test_error_with_disabled_unrecoverable
+    set_server_response_code(500)
+    event = { "type" => "otlp_logs", "message" => TestData::JSON::LOGS }
 
+    d = create_driver(<<~CONFIG)
+      <http>
+        endpoint "http://127.0.0.1:4318"
+        error_response_as_unrecoverable false
+      </http>
+    CONFIG
+    d.run(default_tag: "otlp.test", shutdown: false) do
+      d.feed(event)
+    end
+
+    assert_match(%r{got error response from 'http://127.0.0.1:4318/v1/logs', response code is 500},
+                 d.instance.log.out.logs.join)
+
+    d.instance_shutdown
+  end
+
+  def test_write_with_retryable_response
+    old_report_on_exception = Thread.report_on_exception
+    Thread.report_on_exception = false # thread finished as invalid state since RetryableResponse raises.
+
+    set_server_response_code(503)
+    event = { "type" => "otlp_logs", "message" => TestData::JSON::LOGS }
+
+    d = create_driver(<<~CONFIG)
+      <http>
+        endpoint "http://127.0.0.1:4318"
+        retryable_response_codes [503]
+      </http>
+    CONFIG
+
+    assert_raise(Fluent::Plugin::OtlpOutput::RetryableResponse) do
+      d.run(default_tag: "otlp.test", shutdown: false) do
+        d.feed(event)
+      end
+    end
+
+    d.instance_shutdown(log: $log)
+  ensure
+    Thread.report_on_exception = old_report_on_exception
+  end
 
   def decompress(data)
     Zlib::GzipReader.new(StringIO.new(data)).read

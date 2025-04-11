@@ -68,15 +68,13 @@ module Fluent::Plugin
       response = connection.post
 
       if response.status != 200
-        message = "got error response #{response.status} from '#{uri}'"
-
         if @http_config.retryable_response_codes&.include?(response.status)
-          raise RetryableResponse, message
+          raise RetryableResponse, "got retryable error response from '#{uri}', response code is #{response.status}"
         end
         if @http_config.error_response_as_unrecoverable
-          raise Fluent::UnrecoverableError, message
+          raise Fluent::UnrecoverableError, "got unrecoverable error response from '#{uri}', response code is #{response.status}"
         else
-          log.error message
+          log.error "got error response from '#{uri}', response code is #{response.status}"
         end
       end
     end
