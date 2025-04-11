@@ -38,6 +38,9 @@ Style/ClassVars:
 Style/FetchEnvVar:
   Enabled: false
 
+Style/PercentLiteralDelimiters:
+  Enabled: false
+
 Style/StringConcatenation:
   Enabled: false
 

@@ -32,7 +32,7 @@ class Fluent::Plugin::OtlpOutputTest < Test::Unit::TestCase
     @@server_request
   end
 
-  def set_server_response_code(code)
+  def server_response_code(code)
     @@server_response_code = code
   end
 
@@ -141,7 +141,7 @@ class Fluent::Plugin::OtlpOutputTest < Test::Unit::TestCase
   end
 
   def test_unrecoverable_error
-    set_server_response_code(500)
+    server_response_code(500)
     event = { "type" => "otlp_logs", "message" => TestData::JSON::LOGS }
 
     d = create_driver
@@ -156,15 +156,15 @@ class Fluent::Plugin::OtlpOutputTest < Test::Unit::TestCase
   end
 
   def test_error_with_disabled_unrecoverable
-    set_server_response_code(500)
+    server_response_code(500)
     event = { "type" => "otlp_logs", "message" => TestData::JSON::LOGS }
 
-    d = create_driver(<<~CONFIG)
+    d = create_driver(%[
       <http>
         endpoint "http://127.0.0.1:4318"
         error_response_as_unrecoverable false
       </http>
-    CONFIG
+    ])
     d.run(default_tag: "otlp.test", shutdown: false) do
       d.feed(event)
     end
@@ -179,15 +179,15 @@ class Fluent::Plugin::OtlpOutputTest < Test::Unit::TestCase
     old_report_on_exception = Thread.report_on_exception
     Thread.report_on_exception = false # thread finished as invalid state since RetryableResponse raises.
 
-    set_server_response_code(503)
+    server_response_code(503)
     event = { "type" => "otlp_logs", "message" => TestData::JSON::LOGS }
 
-    d = create_driver(<<~CONFIG)
+    d = create_driver(%[
       <http>
         endpoint "http://127.0.0.1:4318"
         retryable_response_codes [503]
       </http>
-    CONFIG
+    ])
 
     assert_raise(Fluent::Plugin::OtlpOutput::RetryableResponse) do
       d.run(default_tag: "otlp.test", shutdown: false) do
@@ -195,7 +195,7 @@ class Fluent::Plugin::OtlpOutputTest < Test::Unit::TestCase
       end
     end
 
-    d.instance_shutdown(log: $log)
+    d.instance_shutdown
   ensure
     Thread.report_on_exception = old_report_on_exception
   end
