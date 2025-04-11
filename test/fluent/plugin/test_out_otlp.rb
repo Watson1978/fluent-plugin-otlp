@@ -8,7 +8,7 @@ require "fluent/test/driver/output"
 require "webrick"
 
 class Fluent::Plugin::OtlpOutputTest < Test::Unit::TestCase
-  class ServerRequest < Struct.new(:request_method, :path, :header, :body); end
+  ServerRequest = Struct.new(:request_method, :path, :header, :body)
 
   DEFAULT_LOGGER = ::WEBrick::Log.new($stdout, ::WEBrick::BasicLog::FATAL)
 

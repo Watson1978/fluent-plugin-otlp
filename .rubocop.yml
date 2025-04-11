@@ -31,7 +31,14 @@ Style/ArgumentsForwarding:
 Style/ClassAndModuleChildren:
   Enabled: false
 
+Style/ClassVars:
+  Exclude:
+    - 'test/**/*.rb'
+
 Style/FetchEnvVar:
+  Enabled: false
+
+Style/StringConcatenation:
   Enabled: false
 
 Style/StringHashKeys:
