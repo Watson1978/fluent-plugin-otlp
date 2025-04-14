@@ -18,9 +18,9 @@ include Fluent::Test::Helpers
 module TestData
   module JSON
     # trim white spaces
-    METRICS = ::JSON.generate(::JSON.parse(File.read(File.join(__dir__, "./fluent/assets/metrics.json"))))
-    TRACES = ::JSON.generate(::JSON.parse(File.read(File.join(__dir__, "./fluent/assets/traces.json"))))
-    LOGS = ::JSON.generate(::JSON.parse(File.read(File.join(__dir__, "./fluent/assets/logs.json"))))
+    METRICS = ::JSON.generate(::JSON.parse(File.read(File.join(__dir__, "./fluent/resources/data/metrics.json"))))
+    TRACES = ::JSON.generate(::JSON.parse(File.read(File.join(__dir__, "./fluent/resources/data/traces.json"))))
+    LOGS = ::JSON.generate(::JSON.parse(File.read(File.join(__dir__, "./fluent/resources/data/logs.json"))))
 
     INVALID = '{"resourceMetrics": "invalid"}'
   end
