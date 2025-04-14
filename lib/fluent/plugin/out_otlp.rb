@@ -33,14 +33,14 @@ module Fluent::Plugin
       config_param :error_response_as_unrecoverable, :bool, default: true
       desc "The list of retryable response code"
       config_param :retryable_response_codes, :array, value_type: :integer, default: nil
+
+      desc "Compress request body"
+      config_param :compress, :enum, list: %i[text gzip], default: :text
     end
 
     config_section :transport, required: false, multi: false, init: true, param_name: :transport_config do
       config_argument :protocol, :enum, list: [:tls], default: nil
     end
-
-    desc "Compress request body"
-    config_param :compress, :enum, list: %i[text gzip], default: :text
 
     def configure(conf)
       super
@@ -115,7 +115,7 @@ module Fluent::Plugin
       end
 
       headers = { Otlp::CONTENT_TYPE => Otlp::CONTENT_TYPE_PROTOBUF }
-      if @compress == :gzip
+      if @http_config.compress == :gzip
         headers[Otlp::CONTENT_ENCODING] = Otlp::CONTENT_ENCODING_GZIP
         gz = Zlib::GzipWriter.new(StringIO.new)
         gz << body

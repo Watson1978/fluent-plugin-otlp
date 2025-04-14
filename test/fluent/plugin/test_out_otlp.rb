@@ -131,7 +131,12 @@ class Fluent::Plugin::OtlpOutputTest < Test::Unit::TestCase
   def test_send_compressed_message
     event = { "type" => "otlp_logs", "message" => TestData::JSON::LOGS }
 
-    d = create_driver(config + "compress gzip")
+    d = create_driver(%[
+      <http>
+        endpoint "http://127.0.0.1:14318"
+        compress gzip
+      </http>
+    ])
     d.run(default_tag: "otlp.test") do
       d.feed(event)
     end
