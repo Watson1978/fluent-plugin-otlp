@@ -73,7 +73,7 @@ class Fluent::Plugin::OtlpInputTest < Test::Unit::TestCase
   def test_receive_compressed_json
     d = create_driver
     res = d.run(expect_records: 1) do
-      post_json("/v1/logs", compress(TestData::JSON::LOGS), { "Content-Encoding" => "gzip" })
+      post_json("/v1/logs", compress(TestData::JSON::LOGS), headers: { "Content-Encoding" => "gzip" })
     end
 
     expected_events = [["otlp.test", @event_time, { type: "otlp_logs", message: TestData::JSON::LOGS }]]
@@ -122,7 +122,7 @@ class Fluent::Plugin::OtlpInputTest < Test::Unit::TestCase
   def test_receive_compressed_protocol_buffers
     d = create_driver
     res = d.run(expect_records: 1) do
-      post_json("/v1/logs", compress(TestData::ProtocolBuffers::LOGS), { "Content-Encoding" => "gzip" })
+      post_protobuf("/v1/logs", compress(TestData::ProtocolBuffers::LOGS), headers: { "Content-Encoding" => "gzip" })
     end
 
     expected_events = [["otlp.test", @event_time, { type: "otlp_logs", message: TestData::JSON::LOGS }]]
@@ -142,7 +142,7 @@ class Fluent::Plugin::OtlpInputTest < Test::Unit::TestCase
   def test_invalid_content_type
     d = create_driver
     res = d.run(expect_records: 0) do
-      post("/v1/logs", TestData::JSON::LOGS, { "Content-Type" => "text/plain" })
+      post("/v1/logs", TestData::JSON::LOGS, headers: { "Content-Type" => "text/plain" })
     end
 
     assert_equal(415, res.status)
@@ -151,7 +151,7 @@ class Fluent::Plugin::OtlpInputTest < Test::Unit::TestCase
   def test_invalid_content_encoding
     d = create_driver
     res = d.run(expect_records: 0) do
-      post_json("/v1/logs", TestData::JSON::LOGS, { "Content-Encoding" => "deflate" })
+      post_json("/v1/logs", TestData::JSON::LOGS, headers: { "Content-Encoding" => "deflate" })
     end
 
     assert_equal(400, res.status)
@@ -192,31 +192,31 @@ class Fluent::Plugin::OtlpInputTest < Test::Unit::TestCase
     gz.close.string
   end
 
-  def post_https_json(path, json, headers = {})
+  def post_https_json(path, json, headers: {})
     headers = headers.merge({ "Content-Type" => "application/json" })
-    post(path, json, "https://127.0.0.1:4318", headers, https_option)
+    post(path, json, endpoint: "https://127.0.0.1:4318", headers: headers, options: https_option)
   end
 
-  def post_json(path, json, headers = {}, opts = {})
+  def post_json(path, json, headers: {}, options: {})
     headers = headers.merge({ "Content-Type" => "application/json" })
-    post(path, json, headers, opts)
+    post(path, json, headers: headers, options: options)
   end
 
-  def post_protobuf(path, binary, headers = {}, opts = {})
+  def post_protobuf(path, binary, headers: {}, options: {})
     headers = headers.merge({ "Content-Type" => "application/x-protobuf" })
-    post(path, binary, headers, opts)
+    post(path, binary, headers: headers, options: options)
   end
 
-  def post(path, body, endpoint = "http://127.0.0.1:4318", headers = {}, opts = {})
-    connection = Excon.new("#{endpoint}#{path}", body: body, headers: headers, **opts)
+  def post(path, body, endpoint: "http://127.0.0.1:4318", headers: {}, options: {})
+    connection = Excon.new("#{endpoint}#{path}", body: body, headers: headers, **options)
     connection.post
   end
 
   def https_option
     Excon.defaults[:ssl_verify_peer] = false
     {
-      client_cert: "#{File.expand_path(File.dirname(__FILE__) + '/../resources/certs/ca.crt')}",
-      client_key: "#{File.expand_path(File.dirname(__FILE__) + '/../resources/certs/ca.key')}"
+      client_cert: File.expand_path(File.dirname(__FILE__) + "/../resources/certs/ca.crt"),
+      client_key: File.expand_path(File.dirname(__FILE__) + "/../resources/certs/ca.key")
     }
   end
 end
