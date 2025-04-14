@@ -6,6 +6,7 @@ require "fluent/plugin/out_otlp"
 require "fluent/test/driver/output"
 
 require "webrick"
+require "webrick/https"
 
 class Fluent::Plugin::OtlpOutputTest < Test::Unit::TestCase
   ServerRequest = Struct.new(:request_method, :path, :header, :body)
@@ -64,7 +65,7 @@ class Fluent::Plugin::OtlpOutputTest < Test::Unit::TestCase
 
     @@server_request = nil
     @@server_response_code = 200
-    @@http_server_thread ||= Thread.new do
+    @@http_server_thread = Thread.new do
       run_http_server
     end
   end
@@ -72,6 +73,8 @@ class Fluent::Plugin::OtlpOutputTest < Test::Unit::TestCase
   def teardown
     @@server_request = nil
     @@server_response_code = 200
+    @@http_server_thread.kill
+    @@http_server_thread = nil
   end
 
   def create_driver(conf = config)
@@ -198,6 +201,44 @@ class Fluent::Plugin::OtlpOutputTest < Test::Unit::TestCase
     d.instance_shutdown
   ensure
     Thread.report_on_exception = old_report_on_exception
+  end
+
+  sub_test_case "HTTPS" do
+    def server_config
+      config = super
+      config[:Port] = "14318"
+      # WEBrick supports self-generated self-signed certificate
+      config[:SSLEnable] = true
+      config[:SSLCertName] = [["CN", WEBrick::Utils.getservername]]
+      config
+    end
+
+    def config
+      <<~"CONFIG"
+        <http>
+          endpoint "https://127.0.0.1:14318"
+        </http>
+        <transport tls>
+          cert_path "#{File.expand_path(File.dirname(__FILE__) + '/../resources/certs/ca.crt')}"
+          private_key_path "#{File.expand_path(File.dirname(__FILE__) + '/../resources/certs/ca.key')}"
+          insecure true
+        </transport>
+      CONFIG
+    end
+
+    def test_https_send_logs
+      event = { "type" => "otlp_logs", "message" => TestData::JSON::LOGS }
+
+      d = create_driver
+      d.run(default_tag: "otlp.test") do
+        d.feed(event)
+      end
+
+      assert_equal("/v1/logs", server_request.path)
+      assert_equal("POST", server_request.request_method)
+      assert_equal(["application/x-protobuf"], server_request.header["content-type"])
+      assert_equal(TestData::ProtocolBuffers::LOGS, server_request.body)
+    end
   end
 
   def decompress(data)

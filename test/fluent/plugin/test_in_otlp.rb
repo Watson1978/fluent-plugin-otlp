@@ -157,24 +157,66 @@ class Fluent::Plugin::OtlpInputTest < Test::Unit::TestCase
     assert_equal(400, res.status)
   end
 
+  sub_test_case "HTTPS" do
+    def config
+      <<~"CONFIG"
+        tag otlp.test
+        <http>
+          bind 127.0.0.1
+          port 4318
+        </http>
+        <transport tls>
+          ca_path "#{File.expand_path(File.dirname(__FILE__) + '/../resources/certs/ca.crt')}"
+          cert_path "#{File.expand_path(File.dirname(__FILE__) + '/../resources/certs/server.crt')}"
+          private_key_path "#{File.expand_path(File.dirname(__FILE__) + '/../resources/certs/server.key')}"
+          insecure true
+        </transport>
+      CONFIG
+    end
+
+    def test_https_receive_json
+      d = create_driver
+      res = d.run(expect_records: 1) do
+        post_https_json("/v1/logs", TestData::JSON::LOGS)
+      end
+
+      expected_events = [["otlp.test", @event_time, { type: "otlp_logs", message: TestData::JSON::LOGS }]]
+      assert_equal(200, res.status)
+      assert_equal(expected_events, d.events)
+    end
+  end
+
   def compress(data)
     gz = Zlib::GzipWriter.new(StringIO.new)
     gz << data
     gz.close.string
   end
 
-  def post_json(path, json, headers = {})
+  def post_https_json(path, json, headers = {})
     headers = headers.merge({ "Content-Type" => "application/json" })
-    post(path, json, headers)
+    post(path, json, "https://127.0.0.1:4318", headers, https_option)
   end
 
-  def post_protobuf(path, binary, headers = {})
+  def post_json(path, json, headers = {}, opts = {})
+    headers = headers.merge({ "Content-Type" => "application/json" })
+    post(path, json, headers, opts)
+  end
+
+  def post_protobuf(path, binary, headers = {}, opts = {})
     headers = headers.merge({ "Content-Type" => "application/x-protobuf" })
-    post(path, binary, headers)
+    post(path, binary, headers, opts)
   end
 
-  def post(path, body, headers = {})
-    connection = Excon.new("http://127.0.0.1:4318#{path}", body: body, headers: headers)
+  def post(path, body, endpoint = "http://127.0.0.1:4318", headers = {}, opts = {})
+    connection = Excon.new("#{endpoint}#{path}", body: body, headers: headers, **opts)
     connection.post
+  end
+
+  def https_option
+    Excon.defaults[:ssl_verify_peer] = false
+    {
+      client_cert: "#{File.expand_path(File.dirname(__FILE__) + '/../resources/certs/ca.crt')}",
+      client_key: "#{File.expand_path(File.dirname(__FILE__) + '/../resources/certs/ca.key')}"
+    }
   end
 end
