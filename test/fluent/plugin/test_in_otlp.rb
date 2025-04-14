@@ -11,7 +11,7 @@ class Fluent::Plugin::OtlpInputTest < Test::Unit::TestCase
       tag otlp.test
       <http>
         bind 127.0.0.1
-        port 4318
+        port 14318
       </http>
     CONFIG
   end
@@ -38,7 +38,7 @@ class Fluent::Plugin::OtlpInputTest < Test::Unit::TestCase
     d = create_driver
     assert_equal "otlp.test", d.instance.tag
     assert_equal "127.0.0.1", d.instance.http_config.bind
-    assert_equal 4318, d.instance.http_config.port
+    assert_equal 14318, d.instance.http_config.port
   end
 
   data("metrics" => {
@@ -163,7 +163,7 @@ class Fluent::Plugin::OtlpInputTest < Test::Unit::TestCase
         tag otlp.test
         <http>
           bind 127.0.0.1
-          port 4318
+          port 14318
         </http>
         <transport tls>
           ca_path "#{File.expand_path(File.dirname(__FILE__) + '/../resources/certs/ca.crt')}"
@@ -205,7 +205,7 @@ class Fluent::Plugin::OtlpInputTest < Test::Unit::TestCase
 
   def post_https_json(path, json, headers: {})
     headers = headers.merge({ "Content-Type" => "application/json" })
-    post(path, json, endpoint: "https://127.0.0.1:4318", headers: headers, options: https_option)
+    post(path, json, endpoint: "https://127.0.0.1:14318", headers: headers, options: https_option)
   end
 
   def post_json(path, json, headers: {}, options: {})
@@ -215,7 +215,7 @@ class Fluent::Plugin::OtlpInputTest < Test::Unit::TestCase
 
   def post_https_protobuf(path, binary, headers: {}, options: {})
     headers = headers.merge({ "Content-Type" => "application/x-protobuf" })
-    post(path, binary, endpoint: "https://127.0.0.1:4318", headers: headers, options: options)
+    post(path, binary, endpoint: "https://127.0.0.1:14318", headers: headers, options: options)
   end
 
   def post_protobuf(path, binary, headers: {}, options: {})
@@ -223,7 +223,7 @@ class Fluent::Plugin::OtlpInputTest < Test::Unit::TestCase
     post(path, binary, headers: headers, options: options)
   end
 
-  def post(path, body, endpoint: "http://127.0.0.1:4318", headers: {}, options: {})
+  def post(path, body, endpoint: "http://127.0.0.1:14318", headers: {}, options: {})
     connection = Excon.new("#{endpoint}#{path}", body: body, headers: headers, **options)
     connection.post
   end

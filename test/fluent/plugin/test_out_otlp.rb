@@ -16,13 +16,13 @@ class Fluent::Plugin::OtlpOutputTest < Test::Unit::TestCase
   def config
     <<~CONFIG
       <http>
-        endpoint "http://127.0.0.1:4318"
+        endpoint "http://127.0.0.1:14318"
       </http>
     CONFIG
   end
 
   def server_config
-    config = { BindAddress: "127.0.0.1", Port: "4318" }
+    config = { BindAddress: "127.0.0.1", Port: "14318" }
     # Suppress webrick logs
     config[:Logger] = DEFAULT_LOGGER
     config[:AccessLog] = []
@@ -83,7 +83,7 @@ class Fluent::Plugin::OtlpOutputTest < Test::Unit::TestCase
 
   def test_configure
     d = create_driver
-    assert_equal "http://127.0.0.1:4318", d.instance.http_config.endpoint
+    assert_equal "http://127.0.0.1:14318", d.instance.http_config.endpoint
   end
 
   def test_send_logs
@@ -152,7 +152,7 @@ class Fluent::Plugin::OtlpOutputTest < Test::Unit::TestCase
       d.feed(event)
     end
 
-    assert_match(%r{got unrecoverable error response from 'http://127.0.0.1:4318/v1/logs', response code is 500},
+    assert_match(%r{got unrecoverable error response from 'http://127.0.0.1:14318/v1/logs', response code is 500},
                  d.instance.log.out.logs.join)
 
     d.instance_shutdown
@@ -164,7 +164,7 @@ class Fluent::Plugin::OtlpOutputTest < Test::Unit::TestCase
 
     d = create_driver(%[
       <http>
-        endpoint "http://127.0.0.1:4318"
+        endpoint "http://127.0.0.1:14318"
         error_response_as_unrecoverable false
       </http>
     ])
@@ -172,7 +172,7 @@ class Fluent::Plugin::OtlpOutputTest < Test::Unit::TestCase
       d.feed(event)
     end
 
-    assert_match(%r{got error response from 'http://127.0.0.1:4318/v1/logs', response code is 500},
+    assert_match(%r{got error response from 'http://127.0.0.1:14318/v1/logs', response code is 500},
                  d.instance.log.out.logs.join)
 
     d.instance_shutdown
@@ -187,7 +187,7 @@ class Fluent::Plugin::OtlpOutputTest < Test::Unit::TestCase
 
     d = create_driver(%[
       <http>
-        endpoint "http://127.0.0.1:4318"
+        endpoint "http://127.0.0.1:14318"
         retryable_response_codes [503]
       </http>
     ])
