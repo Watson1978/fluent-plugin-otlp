@@ -31,4 +31,5 @@ Gem::Specification.new do |spec|
   spec.add_dependency("excon", "~> 1.2")
   spec.add_dependency("fluentd", "~> 1.18")
   spec.add_dependency("google-protobuf", "~> 4.30")
+  spec.add_dependency("grpc", "~> 1.71")
 end
