@@ -184,6 +184,17 @@ class Fluent::Plugin::OtlpInputTest < Test::Unit::TestCase
       assert_equal(200, res.status)
       assert_equal(expected_events, d.events)
     end
+
+    def test_https_receive_protocol_buffers
+      d = create_driver
+      res = d.run(expect_records: 1) do
+        post_https_protobuf("/v1/logs", TestData::ProtocolBuffers::LOGS)
+      end
+
+      expected_events = [["otlp.test", @event_time, { type: "otlp_logs", message: TestData::JSON::LOGS }]]
+      assert_equal(200, res.status)
+      assert_equal(expected_events, d.events)
+    end
   end
 
   def compress(data)
@@ -200,6 +211,11 @@ class Fluent::Plugin::OtlpInputTest < Test::Unit::TestCase
   def post_json(path, json, headers: {}, options: {})
     headers = headers.merge({ "Content-Type" => "application/json" })
     post(path, json, headers: headers, options: options)
+  end
+
+  def post_https_protobuf(path, binary, headers: {}, options: {})
+    headers = headers.merge({ "Content-Type" => "application/x-protobuf" })
+    post(path, binary, endpoint: "https://127.0.0.1:4318", headers: headers, options: options)
   end
 
   def post_protobuf(path, binary, headers: {}, options: {})
