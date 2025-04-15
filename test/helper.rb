@@ -26,9 +26,9 @@ module TestData
   end
 
   module ProtocolBuffers
-    METRICS = Fluent::Plugin::Otlp::Request::Metrics.new(TestData::JSON::METRICS).encode
-    TRACES = Fluent::Plugin::Otlp::Request::Traces.new(TestData::JSON::TRACES).encode
-    LOGS = Fluent::Plugin::Otlp::Request::Logs.new(TestData::JSON::LOGS).encode
+    METRICS = Fluent::Plugin::Otlp::Request::Metrics.new(TestData::JSON::METRICS).body
+    TRACES = Fluent::Plugin::Otlp::Request::Traces.new(TestData::JSON::TRACES).body
+    LOGS = Fluent::Plugin::Otlp::Request::Logs.new(TestData::JSON::LOGS).body
 
     INVALID = "invalid"
   end

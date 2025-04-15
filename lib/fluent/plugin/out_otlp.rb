@@ -132,13 +132,13 @@ module Fluent::Plugin
           case record["type"]
           when Otlp::RECORD_TYPE_LOGS
             uri = http_logs_endpoint
-            body = Otlp::Request::Logs.new(msg).encode
+            body = Otlp::Request::Logs.new(msg).body
           when Otlp::RECORD_TYPE_METRICS
             uri = http_metrics_endpoint
-            body = Otlp::Request::Metrics.new(msg).encode
+            body = Otlp::Request::Metrics.new(msg).body
           when Otlp::RECORD_TYPE_TRACES
             uri = http_traces_endpoint
-            body = Otlp::Request::Traces.new(msg).encode
+            body = Otlp::Request::Traces.new(msg).body
           end
         rescue Google::Protobuf::ParseError => e
           # The message format does not comply with the OpenTelemetry protocol.

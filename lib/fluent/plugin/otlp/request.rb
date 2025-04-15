@@ -18,8 +18,8 @@ class Fluent::Plugin::Otlp::Request
         end
     end
 
-    def encode
-      Opentelemetry::Proto::Collector::Logs::V1::ExportLogsServiceRequest.encode(@request)
+    def body
+      @request.class.encode(@request)
     end
 
     def record
@@ -37,8 +37,8 @@ class Fluent::Plugin::Otlp::Request
         end
     end
 
-    def encode
-      Opentelemetry::Proto::Collector::Metrics::V1::ExportMetricsServiceRequest.encode(@request)
+    def body
+      @request.class.encode(@request)
     end
 
     def record
@@ -56,8 +56,8 @@ class Fluent::Plugin::Otlp::Request
         end
     end
 
-    def encode
-      Opentelemetry::Proto::Collector::Trace::V1::ExportTraceServiceRequest.encode(@request)
+    def body
+      @request.class.encode(@request)
     end
 
     def record
