@@ -157,7 +157,7 @@ module Fluent::Plugin
       super
 
       http_handler = HttpHandler.new
-      http_server_create_http_server(:in_otel_http_server_helper, addr: @http_config.bind, port: @http_config.port, logger: log) do |serv|
+      http_server_create_http_server(:in_otlp_http_server_helper, addr: @http_config.bind, port: @http_config.port, logger: log) do |serv|
         serv.post("/v1/logs") do |req|
           http_handler.logs(req) { |record| router.emit(@tag, Fluent::EventTime.now, { type: Otlp::RECORD_TYPE_LOGS, message: record }) }
         end
