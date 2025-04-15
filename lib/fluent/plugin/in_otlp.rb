@@ -10,6 +10,9 @@ require "fluent/plugin_helper/http_server"
 require "zlib"
 
 unless Fluent::PluginHelper::HttpServer::Request.method_defined?(:headers)
+  # This API was introduced at fluentd v1.19.0.
+  # Ref. https://github.com/fluent/fluentd/pull/4903
+  # If we have supported v1.19.0+ only, we can remove this patch.
   module Fluent::PluginHelper::HttpServer
     module Extension
       refine Request do
