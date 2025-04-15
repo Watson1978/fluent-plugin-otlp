@@ -1,12 +1,8 @@
 # frozen_string_literal: true
 
-require "fluent/plugin/otlp/response"
-
 require "opentelemetry/proto/collector/logs/v1/logs_service_services_pb"
 require "opentelemetry/proto/collector/metrics/v1/metrics_service_services_pb"
 require "opentelemetry/proto/collector/trace/v1/trace_service_services_pb"
-
-require "grpc"
 
 class Fluent::Plugin::Otlp::ServiceHandler
   class Logs < Opentelemetry::Proto::Collector::Logs::V1::LogsService::Service
