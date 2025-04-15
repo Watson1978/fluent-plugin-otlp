@@ -4,6 +4,7 @@ require "fluent/plugin/input"
 require "fluent/plugin/otlp/constant"
 require "fluent/plugin/otlp/request"
 require "fluent/plugin/otlp/response"
+require "fluent/plugin/otlp/service_handler"
 require "fluent/plugin_helper/http_server"
 
 require "zlib"
@@ -107,21 +108,76 @@ module Fluent::Plugin
       end
     end
 
+    class GrpcHandler
+      class ExceptionInterceptor < GRPC::ServerInterceptor
+        def request_response(request:, call:, method:)
+          # call actual service
+          yield
+        rescue StandardError => e
+          puts "[#{method}] Error: #{e.message}"
+          raise
+        end
+      end
+
+      def run(logs:, metrics:, traces:)
+        Thread.new do
+          server = GRPC::RpcServer.new(interceptors: [ExceptionInterceptor.new])
+          server.add_http2_port("0.0.0.0:4317", :this_port_is_insecure)
+
+          logs_handler = Otlp::ServiceHandler::Logs.new
+          logs_handler.callback = lambda { |request|
+            logs.call(request.to_json)
+            Otlp::Response::Logs.build
+          }
+          server.handle(logs_handler)
+
+          metrics_handler = Otlp::ServiceHandler::Metrics.new
+          metrics_handler.callback = lambda { |request|
+            metrics.call(request.to_json)
+            Otlp::Response::Metrics.build
+          }
+          server.handle(metrics_handler)
+
+          traces_handler = Otlp::ServiceHandler::Traces.new
+          traces_handler.callback = lambda { |request|
+            traces.call(request.to_json)
+            Otlp::Response::Traces.build
+          }
+          server.handle(traces_handler)
+
+          server.run_till_terminated
+        end
+      end
+    end
+
     def start
       super
 
-      handler = HttpHandler.new
+      http_handler = HttpHandler.new
       http_server_create_http_server(:in_otel_http_server_helper, addr: @http_config.bind, port: @http_config.port, logger: log) do |serv|
         serv.post("/v1/logs") do |req|
-          handler.logs(req) { |record| router.emit(@tag, Fluent::EventTime.now, { type: Otlp::RECORD_TYPE_LOGS, message: record }) }
+          http_handler.logs(req) { |record| router.emit(@tag, Fluent::EventTime.now, { type: Otlp::RECORD_TYPE_LOGS, message: record }) }
         end
         serv.post("/v1/metrics") do |req|
-          handler.metrics(req) { |record| router.emit(@tag, Fluent::EventTime.now, { type: Otlp::RECORD_TYPE_METRICS, message: record }) }
+          http_handler.metrics(req) { |record| router.emit(@tag, Fluent::EventTime.now, { type: Otlp::RECORD_TYPE_METRICS, message: record }) }
         end
         serv.post("/v1/traces") do |req|
-          handler.traces(req) { |record| router.emit(@tag, Fluent::EventTime.now, { type: Otlp::RECORD_TYPE_TRACES, message: record }) }
+          http_handler.traces(req) { |record| router.emit(@tag, Fluent::EventTime.now, { type: Otlp::RECORD_TYPE_TRACES, message: record }) }
         end
       end
+
+      grpc_handler = GrpcHandler.new
+      grpc_handler.run(
+        logs: lambda { |record|
+          router.emit(@tag, Fluent::EventTime.now, { type: Otlp::RECORD_TYPE_LOGS, message: record })
+        },
+        metrics: lambda { |record|
+          router.emit(@tag, Fluent::EventTime.now, { type: Otlp::RECORD_TYPE_METRICS, message: record })
+        },
+        traces: lambda { |record|
+          router.emit(@tag, Fluent::EventTime.now, { type: Otlp::RECORD_TYPE_TRACES, message: record })
+        }
+      )
     end
   end
 end

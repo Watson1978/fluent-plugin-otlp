@@ -25,7 +25,7 @@ module Opentelemetry
       module Profiles
         module V1development
           module ProfilesService
-            # Service that can be used to push profiles between one Application instrumented with
+            # ServiceStub that can be used to push profiles between one Application instrumented with
             # OpenTelemetry and a collector, or between a collector and a central collector.
             class Service
 

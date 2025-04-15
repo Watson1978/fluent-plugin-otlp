@@ -2,7 +2,7 @@
 
 require "fluent/plugin/otlp/constant"
 require "fluent/plugin/otlp/request"
-require "fluent/plugin/otlp/service"
+require "fluent/plugin/otlp/service_stub"
 require "fluent/plugin/output"
 
 require "excon"
@@ -174,11 +174,11 @@ module Fluent::Plugin
 
         case record["type"]
         when Otlp::RECORD_TYPE_LOGS
-          service = Otlp::Service::Logs.new(@grpc_config.endpoint, credential)
+          service = Otlp::ServiceStub::Logs.new(@grpc_config.endpoint, credential)
         when Otlp::RECORD_TYPE_METRICS
-          service = Otlp::Service::Metrics.new(@grpc_config.endpoint, credential)
+          service = Otlp::ServiceStub::Metrics.new(@grpc_config.endpoint, credential)
         when Otlp::RECORD_TYPE_TRACES
-          service = Otlp::Service::Traces.new(@grpc_config.endpoint, credential)
+          service = Otlp::ServiceStub::Traces.new(@grpc_config.endpoint, credential)
         end
 
         begin
