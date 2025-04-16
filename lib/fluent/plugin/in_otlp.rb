@@ -6,6 +6,7 @@ require "fluent/plugin/otlp/request"
 require "fluent/plugin/otlp/response"
 require "fluent/plugin/otlp/service_handler"
 require "fluent/plugin_helper/http_server"
+require "fluent/plugin_helper/thread"
 
 require "zlib"
 
@@ -30,7 +31,7 @@ module Fluent::Plugin
   class OtlpInput < Input
     Fluent::Plugin.register_input("otlp", self)
 
-    helpers :http_server
+    helpers :thread, :http_server
 
     desc "The tag of the event."
     config_param :tag, :string
@@ -67,7 +68,7 @@ module Fluent::Plugin
 
       if @http_config
         http_handler = HttpHandler.new
-        http_server_create_http_server(:in_otlp_http_server_helper, addr: @http_config.bind, port: @http_config.port, logger: log) do |serv|
+        http_server_create_http_server(:in_otlp_http_server, addr: @http_config.bind, port: @http_config.port, logger: log) do |serv|
           serv.post("/v1/logs") do |req|
             http_handler.logs(req) { |record| router.emit(@tag, Fluent::EventTime.now, { type: Otlp::RECORD_TYPE_LOGS, message: record }) }
           end
@@ -81,18 +82,20 @@ module Fluent::Plugin
       end
 
       if @grpc_config
-        grpc_handler = GrpcHandler.new(@grpc_config)
-        grpc_handler.run(
-          logs: lambda { |record|
-            router.emit(@tag, Fluent::EventTime.now, { type: Otlp::RECORD_TYPE_LOGS, message: record })
-          },
-          metrics: lambda { |record|
-            router.emit(@tag, Fluent::EventTime.now, { type: Otlp::RECORD_TYPE_METRICS, message: record })
-          },
-          traces: lambda { |record|
-            router.emit(@tag, Fluent::EventTime.now, { type: Otlp::RECORD_TYPE_TRACES, message: record })
-          }
-        )
+        thread_create(:in_otlp_grpc_server) do
+          grpc_handler = GrpcHandler.new(@grpc_config)
+          grpc_handler.run(
+            logs: lambda { |record|
+              router.emit(@tag, Fluent::EventTime.now, { type: Otlp::RECORD_TYPE_LOGS, message: record })
+            },
+            metrics: lambda { |record|
+              router.emit(@tag, Fluent::EventTime.now, { type: Otlp::RECORD_TYPE_METRICS, message: record })
+            },
+            traces: lambda { |record|
+              router.emit(@tag, Fluent::EventTime.now, { type: Otlp::RECORD_TYPE_TRACES, message: record })
+            }
+          )
+        end
       end
     end
 
@@ -177,33 +180,31 @@ module Fluent::Plugin
       end
 
       def run(logs:, metrics:, traces:)
-        Thread.new do
-          server = GRPC::RpcServer.new(interceptors: [ExceptionInterceptor.new])
-          server.add_http2_port("#{@grpc_config.host}:#{@grpc_config.port}", :this_port_is_insecure)
+        server = GRPC::RpcServer.new(interceptors: [ExceptionInterceptor.new])
+        server.add_http2_port("#{@grpc_config.host}:#{@grpc_config.port}", :this_port_is_insecure)
 
-          logs_handler = Otlp::ServiceHandler::Logs.new
-          logs_handler.callback = lambda { |request|
-            logs.call(request.to_json)
-            Otlp::Response::Logs.build
-          }
-          server.handle(logs_handler)
+        logs_handler = Otlp::ServiceHandler::Logs.new
+        logs_handler.callback = lambda { |request|
+          logs.call(request.to_json)
+          Otlp::Response::Logs.build
+        }
+        server.handle(logs_handler)
 
-          metrics_handler = Otlp::ServiceHandler::Metrics.new
-          metrics_handler.callback = lambda { |request|
-            metrics.call(request.to_json)
-            Otlp::Response::Metrics.build
-          }
-          server.handle(metrics_handler)
+        metrics_handler = Otlp::ServiceHandler::Metrics.new
+        metrics_handler.callback = lambda { |request|
+          metrics.call(request.to_json)
+          Otlp::Response::Metrics.build
+        }
+        server.handle(metrics_handler)
 
-          traces_handler = Otlp::ServiceHandler::Traces.new
-          traces_handler.callback = lambda { |request|
-            traces.call(request.to_json)
-            Otlp::Response::Traces.build
-          }
-          server.handle(traces_handler)
+        traces_handler = Otlp::ServiceHandler::Traces.new
+        traces_handler.callback = lambda { |request|
+          traces.call(request.to_json)
+          Otlp::Response::Traces.build
+        }
+        server.handle(traces_handler)
 
-          server.run_till_terminated
-        end
+        server.run_till_terminated
       end
     end
   end
