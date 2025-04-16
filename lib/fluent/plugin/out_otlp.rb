@@ -52,6 +52,10 @@ module Fluent::Plugin
     def configure(conf)
       super
 
+      unless [@http_config, @grpc_config].one?
+        raise Fluent::ConfigError, "Please configure either <http> or <grpc> section."
+      end
+
       @http_handler = HttpHandler.new(@http_config, @transport_config, log) if @http_config
       @grpc_handler = GrpcHandler.new(@grpc_config, @transport_config, log) if @grpc_config
     end
@@ -65,14 +69,10 @@ module Fluent::Plugin
     end
 
     def write(chunk)
-      if @http_handler
-        @http_handler.export(chunk)
-
-        return
-      end
-
       if @grpc_handler
         @grpc_handler.export(chunk)
+      else
+        @http_handler.export(chunk)
       end
     end
 

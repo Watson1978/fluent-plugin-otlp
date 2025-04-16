@@ -38,6 +38,13 @@ Style/ClassVars:
 Style/FetchEnvVar:
   Enabled: false
 
+Style/NumericLiterals:
+  Enabled: false
+
+Style/MixinUsage:
+  Exclude:
+    - 'test/helper.rb'
+
 Style/PercentLiteralDelimiters:
   Enabled: false
 

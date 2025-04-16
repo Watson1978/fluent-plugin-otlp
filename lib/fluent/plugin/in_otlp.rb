@@ -35,15 +35,65 @@ module Fluent::Plugin
     desc "The tag of the event."
     config_param :tag, :string
 
-    config_section :http, required: false, multi: false, init: true, param_name: :http_config do
+    config_section :http, required: false, multi: false, init: false, param_name: :http_config do
       desc "The address to bind to."
       config_param :bind, :string, default: "0.0.0.0"
       desc "The port to listen to."
       config_param :port, :integer, default: 4318
     end
 
+
+    config_section :grpc, required: false, multi: false, init: false, param_name: :grpc_config do
+      desc "The address to bind to."
+      config_param :bind, :string, default: "0.0.0.0"
+      desc "The port to listen to."
+      config_param :port, :integer, default: 4317
+    end
+
     config_section :transport, required: false, multi: false, init: true, param_name: :transport_config do
       config_argument :protocol, :enum, list: [:tls], default: nil
+    end
+
+    def configure(conf)
+      super
+
+      unless [@http_config, @grpc_config].any?
+        raise Fluent::ConfigError, "Please configure either <http> or <grpc> section, or both."
+      end
+    end
+
+    def start
+      super
+
+      if @http_config
+        http_handler = HttpHandler.new
+        http_server_create_http_server(:in_otlp_http_server_helper, addr: @http_config.bind, port: @http_config.port, logger: log) do |serv|
+          serv.post("/v1/logs") do |req|
+            http_handler.logs(req) { |record| router.emit(@tag, Fluent::EventTime.now, { type: Otlp::RECORD_TYPE_LOGS, message: record }) }
+          end
+          serv.post("/v1/metrics") do |req|
+            http_handler.metrics(req) { |record| router.emit(@tag, Fluent::EventTime.now, { type: Otlp::RECORD_TYPE_METRICS, message: record }) }
+          end
+          serv.post("/v1/traces") do |req|
+            http_handler.traces(req) { |record| router.emit(@tag, Fluent::EventTime.now, { type: Otlp::RECORD_TYPE_TRACES, message: record }) }
+          end
+        end
+      end
+
+      if @grpc_config
+        grpc_handler = GrpcHandler.new
+        grpc_handler.run(
+          logs: lambda { |record|
+            router.emit(@tag, Fluent::EventTime.now, { type: Otlp::RECORD_TYPE_LOGS, message: record })
+          },
+          metrics: lambda { |record|
+            router.emit(@tag, Fluent::EventTime.now, { type: Otlp::RECORD_TYPE_METRICS, message: record })
+          },
+          traces: lambda { |record|
+            router.emit(@tag, Fluent::EventTime.now, { type: Otlp::RECORD_TYPE_TRACES, message: record })
+          }
+        )
+      end
     end
 
     class HttpHandler
@@ -151,36 +201,6 @@ module Fluent::Plugin
           server.run_till_terminated
         end
       end
-    end
-
-    def start
-      super
-
-      http_handler = HttpHandler.new
-      http_server_create_http_server(:in_otlp_http_server_helper, addr: @http_config.bind, port: @http_config.port, logger: log) do |serv|
-        serv.post("/v1/logs") do |req|
-          http_handler.logs(req) { |record| router.emit(@tag, Fluent::EventTime.now, { type: Otlp::RECORD_TYPE_LOGS, message: record }) }
-        end
-        serv.post("/v1/metrics") do |req|
-          http_handler.metrics(req) { |record| router.emit(@tag, Fluent::EventTime.now, { type: Otlp::RECORD_TYPE_METRICS, message: record }) }
-        end
-        serv.post("/v1/traces") do |req|
-          http_handler.traces(req) { |record| router.emit(@tag, Fluent::EventTime.now, { type: Otlp::RECORD_TYPE_TRACES, message: record }) }
-        end
-      end
-
-      grpc_handler = GrpcHandler.new
-      grpc_handler.run(
-        logs: lambda { |record|
-          router.emit(@tag, Fluent::EventTime.now, { type: Otlp::RECORD_TYPE_LOGS, message: record })
-        },
-        metrics: lambda { |record|
-          router.emit(@tag, Fluent::EventTime.now, { type: Otlp::RECORD_TYPE_METRICS, message: record })
-        },
-        traces: lambda { |record|
-          router.emit(@tag, Fluent::EventTime.now, { type: Otlp::RECORD_TYPE_TRACES, message: record })
-        }
-      )
     end
   end
 end
