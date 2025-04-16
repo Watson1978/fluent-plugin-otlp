@@ -10,7 +10,7 @@ class Fluent::Plugin::Otlp::ServiceHandler
       @callback = block
     end
 
-    def export(req)
+    def export(req, _call)
       @callback.call(req)
     end
   end
@@ -21,6 +21,7 @@ class Fluent::Plugin::Otlp::ServiceHandler
     end
 
     def export(req, _call)
+      puts "!" * 80
       @callback.call(req)
     end
   end
@@ -30,7 +31,7 @@ class Fluent::Plugin::Otlp::ServiceHandler
       @callback = block
     end
 
-    def export(req)
+    def export(req, _call)
       @callback.call(req)
     end
   end
