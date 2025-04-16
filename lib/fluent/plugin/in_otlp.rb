@@ -81,7 +81,7 @@ module Fluent::Plugin
       end
 
       if @grpc_config
-        grpc_handler = GrpcHandler.new
+        grpc_handler = GrpcHandler.new(@grpc_config)
         grpc_handler.run(
           logs: lambda { |record|
             router.emit(@tag, Fluent::EventTime.now, { type: Otlp::RECORD_TYPE_LOGS, message: record })
@@ -172,10 +172,14 @@ module Fluent::Plugin
         end
       end
 
+      def initialize(grpc_config)
+        @grpc_config = grpc_config
+      end
+
       def run(logs:, metrics:, traces:)
         Thread.new do
           server = GRPC::RpcServer.new(interceptors: [ExceptionInterceptor.new])
-          server.add_http2_port("0.0.0.0:4317", :this_port_is_insecure)
+          server.add_http2_port("#{@grpc_config.host}:#{@grpc_config.port}", :this_port_is_insecure)
 
           logs_handler = Otlp::ServiceHandler::Logs.new
           logs_handler.callback = lambda { |request|
