@@ -181,7 +181,7 @@ module Fluent::Plugin
 
       def run(logs:, metrics:, traces:)
         server = GRPC::RpcServer.new(interceptors: [ExceptionInterceptor.new])
-        server.add_http2_port("#{@grpc_config.host}:#{@grpc_config.port}", :this_port_is_insecure)
+        server.add_http2_port("#{@grpc_config.bind}:#{@grpc_config.port}", :this_port_is_insecure)
 
         logs_handler = Otlp::ServiceHandler::Logs.new
         logs_handler.callback = lambda { |request|
