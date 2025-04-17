@@ -43,7 +43,6 @@ module Fluent::Plugin
       config_param :port, :integer, default: 4318
     end
 
-
     config_section :grpc, required: false, multi: false, init: false, param_name: :grpc_config do
       desc "The address to bind to."
       config_param :bind, :string, default: "0.0.0.0"
