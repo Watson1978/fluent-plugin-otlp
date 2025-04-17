@@ -8,6 +8,9 @@ Rake::TestTask.new(:test) do |t|
   t.libs << "test"
   t.libs << "lib"
   t.test_files = FileList["test/**/test_*.rb"]
+
+  # Disable displaying 'warning: literal string will be frozen in the future'
+  ENV["RUBYOPT"] = "--disable=frozen_string_literal"
 end
 
 task default: :test
