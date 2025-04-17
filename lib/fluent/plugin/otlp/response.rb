@@ -35,7 +35,7 @@ module Fluent::Plugin::Otlp::Response
 
     def body(type:)
       if type == :protobuf
-        @response.class.encode(@response)
+        @response.to_proto
       else
         @response.to_json
       end
@@ -58,7 +58,7 @@ module Fluent::Plugin::Otlp::Response
 
     def body(type:)
       if type == :protobuf
-        @response.class.encode(@response)
+        @response.to_proto
       else
         @response.to_json
       end
@@ -81,7 +81,7 @@ module Fluent::Plugin::Otlp::Response
 
     def body(type:)
       if type == :protobuf
-        @response.class.encode(@response)
+        @response.to_proto
       else
         @response.to_json
       end

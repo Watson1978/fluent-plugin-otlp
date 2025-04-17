@@ -19,7 +19,7 @@ class Fluent::Plugin::Otlp::Request
     end
 
     def body
-      @request.class.encode(@request)
+      @request.to_proto
     end
 
     def record
@@ -38,7 +38,7 @@ class Fluent::Plugin::Otlp::Request
     end
 
     def body
-      @request.class.encode(@request)
+      @request.to_proto
     end
 
     def record
@@ -57,7 +57,7 @@ class Fluent::Plugin::Otlp::Request
     end
 
     def body
-      @request.class.encode(@request)
+      @request.to_proto
     end
 
     def record
