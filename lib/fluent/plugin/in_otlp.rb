@@ -83,7 +83,7 @@ module Fluent::Plugin
 
       if @grpc_config
         thread_create(:in_otlp_grpc_server) do
-          grpc_handler = GrpcHandler.new(@grpc_config)
+          grpc_handler = GrpcHandler.new(@grpc_config, log)
           grpc_handler.run(
             logs: lambda { |record|
               router.emit(@tag, Fluent::EventTime.now, { type: Otlp::RECORD_TYPE_LOGS, message: record })
@@ -175,8 +175,9 @@ module Fluent::Plugin
         end
       end
 
-      def initialize(grpc_config)
+      def initialize(grpc_config, logger)
         @grpc_config = grpc_config
+        @logger = logger
       end
 
       def run(logs:, metrics:, traces:)
