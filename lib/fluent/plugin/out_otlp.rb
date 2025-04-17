@@ -69,10 +69,12 @@ module Fluent::Plugin
     end
 
     def write(chunk)
+      record = JSON.parse(chunk.read)
+
       if @grpc_handler
-        @grpc_handler.export(chunk)
+        @grpc_handler.export(record)
       else
-        @http_handler.export(chunk)
+        @http_handler.export(record)
       end
     end
 
@@ -94,8 +96,8 @@ module Fluent::Plugin
         end
       end
 
-      def export(chunk)
-        uri, connection = create_http_connection(chunk)
+      def export(record)
+        uri, connection = create_http_connection(record)
         response = connection.post
 
         if response.status != 200
@@ -124,8 +126,7 @@ module Fluent::Plugin
         "#{@http_config.endpoint}/v1/traces"
       end
 
-      def create_http_connection(chunk)
-        record = JSON.parse(chunk.read)
+      def create_http_connection(record)
         msg = record["message"]
 
         begin
@@ -166,8 +167,7 @@ module Fluent::Plugin
         @logger = logger
       end
 
-      def export(chunk)
-        record = JSON.parse(chunk.read)
+      def export(record)
         msg = record["message"]
 
         credential = :this_channel_is_insecure
