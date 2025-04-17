@@ -25,7 +25,7 @@ module Opentelemetry
       module Trace
         module V1
           module TraceService
-            # ServiceStub that can be used to push spans between one Application instrumented with
+            # Service that can be used to push spans between one Application instrumented with
             # OpenTelemetry and a collector, or between a collector and a central collector (in this
             # case spans are sent/received to/from multiple Applications).
             class Service

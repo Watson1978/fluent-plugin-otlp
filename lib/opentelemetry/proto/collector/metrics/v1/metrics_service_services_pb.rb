@@ -25,7 +25,7 @@ module Opentelemetry
       module Metrics
         module V1
           module MetricsService
-            # ServiceStub that can be used to push metrics between one Application
+            # Service that can be used to push metrics between one Application
             # instrumented with OpenTelemetry and a collector, or between a collector and a
             # central collector.
             class Service
